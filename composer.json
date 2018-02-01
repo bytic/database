@@ -1,0 +1,38 @@
+{
+  "name": "bytic/database",
+  "type": "library",
+  "description": "Php Framework",
+  "homepage": "https://github.com/ByTIC/view",
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "Gabriel Solomon",
+      "email": "hello@gabrielsolomon.ro"
+    }
+  ],
+  "autoload": {
+    "psr-4": {
+      "Nip\\Database\\": "src"
+    },
+    "classmap": [
+      "src"
+    ],
+    "files": [
+    ]
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "Nip\\Database\\Tests\\": "tests/"
+    }
+  },
+  "require": {
+    "php": "^7.0",
+    "bytic/container": "^1.0",
+    "bytic/collections": "^1.0"
+  },
+  "require-dev": {
+    "squizlabs/php_codesniffer": "^3.0",
+    "phpunit/phpunit": "^6.2",
+    "mockery/mockery": "^0.9"
+  }
+}
