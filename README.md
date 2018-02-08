@@ -9,5 +9,5 @@ ByTIC Database component
 [![Build Status](https://img.shields.io/travis/bytic/database/master.svg?style=flat-square)](https://travis-ci.org/bytic/framework)
 [![SensioLabsInsight](https://insight.sensiolabs.com/projects/fac4cb9c-22b4-47e9-aabc-4344588434a4/mini.png)](https://insight.sensiolabs.com/projects/fac4cb9c-22b4-47e9-aabc-4344588434a4)
 [![Quality Score](https://img.shields.io/scrutinizer/g/bytic/database.svg?style=flat-square)](https://scrutinizer-ci.com/g/bytic/database)
-[![StyleCI](https://styleci.io/repos/118474281/shield?branch=master)](https://styleci.io/repos/118474281)
+[![StyleCI](https://styleci.io/repos/119889868/shield?branch=master)](https://styleci.io/repos/119889868)
 [![Total Downloads](https://img.shields.io/packagist/dt/bytic/database.svg?style=flat-square)](https://packagist.org/packages/bytic/database)

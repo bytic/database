@@ -398,7 +398,7 @@ abstract class AbstractQuery
      */
     public function hasPart($name)
     {
-        return isset($this->parts[$name]) && count($this->parts[$name]);
+        return isset($this->parts[$name]) && is_array($this->parts[$name]) && count($this->parts[$name]);
     }
 
     /**
