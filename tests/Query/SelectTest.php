@@ -103,6 +103,41 @@ class SelectTest extends AbstractTest
         static::assertEquals("SELECT * FROM `table1` UNION SELECT * FROM `table2`", $union->assemble());
     }
 
+    public function testHasPart()
+    {
+        $this->selectQuery->cols('id, name');
+        self::assertTrue($this->selectQuery->hasPart('cols'));
+
+        $this->selectQuery->setCols('id, name');
+        self::assertTrue($this->selectQuery->hasPart('cols'));
+
+        $this->selectQuery->limit('');
+        self::assertFalse($this->selectQuery->hasPart('limit'));
+
+        $this->selectQuery->limit('6');
+        self::assertTrue($this->selectQuery->hasPart('limit'));
+
+        self::assertFalse($this->selectQuery->hasPart('where'));
+    }
+
+    public function testLimit()
+    {
+        $this->selectQuery->cols('id, name')->from('table x');
+        $this->selectQuery->where('id = 5')->where("active = 'yes'");
+        $this->selectQuery->limit(5);
+
+        static::assertEquals(
+            "SELECT id, name FROM table x WHERE id = 5 AND active = 'yes' LIMIT 5",
+            $this->selectQuery->assemble()
+        );
+
+        $this->selectQuery->limit(5, 10);
+        static::assertEquals(
+            "SELECT id, name FROM table x WHERE id = 5 AND active = 'yes' LIMIT 5,10",
+            $this->selectQuery->assemble()
+        );
+    }
+
     protected function setUp()
     {
         parent::setUp();

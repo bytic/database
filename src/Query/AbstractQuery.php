@@ -150,7 +150,7 @@ abstract class AbstractQuery
     {
         if (isset($params['where']) && is_array($params['where'])) {
             foreach ($params['where'] as $condition) {
-                $condition = (array) $condition;
+                $condition = (array)$condition;
                 $this->where(
                     $condition[0],
                     isset($condition[1]) ? $condition[1] : null
@@ -244,7 +244,7 @@ abstract class AbstractQuery
     {
         $this->parts['limit'] = $start;
         if ($offset) {
-            $this->parts['limit'] .= ',' . $offset;
+            $this->parts['limit'] .= ','.$offset;
         }
 
         return $this;
@@ -329,7 +329,7 @@ abstract class AbstractQuery
     public function getString()
     {
         if ($this->string === null) {
-            $this->string = (string) $this->assemble();
+            $this->string = (string)$this->assemble();
         }
 
         return $this->string;
@@ -367,7 +367,7 @@ abstract class AbstractQuery
      */
     protected function parseWhere()
     {
-        return is_object($this->parts['where']) ? (string) $this->parts['where'] : '';
+        return is_object($this->parts['where']) ? (string)$this->parts['where'] : '';
     }
 
     /**
@@ -398,7 +398,17 @@ abstract class AbstractQuery
      */
     public function hasPart($name)
     {
-        return isset($this->parts[$name]) && is_array($this->parts[$name]) && count($this->parts[$name]);
+        if (!isset($this->parts[$name])) {
+            return false;
+        }
+        if (is_array($this->parts[$name]) && count($this->parts[$name]) < 1) {
+            return false;
+        }
+        if (is_string($this->parts[$name]) && empty($this->parts[$name])) {
+            return false;
+        }
+
+        return true;
     }
 
     /**
@@ -432,7 +442,7 @@ abstract class AbstractQuery
     protected function parseHaving()
     {
         if (isset($this->parts['having'])) {
-            return (string) $this->parts['having'];
+            return (string)$this->parts['having'];
         }
 
         return '';
@@ -461,7 +471,7 @@ abstract class AbstractQuery
                 $type = isset($itemOrder[1]) ? $itemOrder[1] : '';
                 $protected = isset($itemOrder[2]) ? $itemOrder[2] : true;
 
-                $column = ($protected ? $this->protect($column) : $column) . ' ' . strtoupper($type);
+                $column = ($protected ? $this->protect($column) : $column).' '.strtoupper($type);
 
                 $orderParts[] = trim($column);
             }
@@ -479,7 +489,7 @@ abstract class AbstractQuery
     protected function protect($input)
     {
         return strpos($input, '(') !== false ? $input : str_replace("`*`", "*",
-            '`' . str_replace('.', '`.`', $input) . '`');
+            '`'.str_replace('.', '`.`', $input).'`');
     }
 
     /**
