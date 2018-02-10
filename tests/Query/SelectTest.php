@@ -7,6 +7,10 @@ use Nip\Database\Connection;
 use Nip\Database\Query\Select;
 use Nip\Database\Tests\AbstractTest;
 
+/**
+ * Class SelectTest
+ * @package Nip\Database\Tests\Query
+ */
 class SelectTest extends AbstractTest
 {
     /**
@@ -83,14 +87,14 @@ class SelectTest extends AbstractTest
 
     public function testUnion()
     {
-        //		$this->_object->from("table1");
-//
-//		$query = $this->_db->newQuery();
-//		$query->from("table2");
-//
-//		$union = $this->_object->union($query);
-//
-//		static::assertEquals("SELECT * FROM `table1` UNION SELECT * FROM `table2`", $union->assemble());
+        		$this->_object->from("table1");
+
+		$query = $this->_db->newQuery();
+		$query->from("table2");
+
+		$union = $this->_object->union($query);
+
+		static::assertEquals("SELECT * FROM `table1` UNION SELECT * FROM `table2`", $union->assemble());
     }
 
     protected function setUp()

@@ -35,7 +35,7 @@ class ConnectionTest extends AbstractTest
     /**
      * @return array
      */
-    public function testNewQueryProvider()
+    public function newQueryProvider()
     {
         $types = ['select', 'insert', 'delete'];
         $return = [];
@@ -47,7 +47,7 @@ class ConnectionTest extends AbstractTest
     }
 
     /**
-     * @dataProvider testNewQueryProvider
+     * @dataProvider newQueryProvider
      *
      * @param $type
      * @param $class

@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "content-hash": "6aed4401215fb3c4c0db9cc214bebdd2",
+    "content-hash": "332a97d8e25ce1533e1e20645dd3c361",
     "packages": [
         {
             "name": "bytic/collections",
@@ -54,22 +54,21 @@
         },
         {
             "name": "bytic/container",
-            "version": "1.0.0",
+            "version": "0.9.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/bytic/container.git",
-                "reference": "52c9a51a405f9b8684a885ff777a52dc4178df7a"
+                "reference": "7396737bd8da9612d527719cb7f62991eb598c53"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/bytic/container/zipball/52c9a51a405f9b8684a885ff777a52dc4178df7a",
-                "reference": "52c9a51a405f9b8684a885ff777a52dc4178df7a",
+                "url": "https://api.github.com/repos/bytic/container/zipball/7396737bd8da9612d527719cb7f62991eb598c53",
+                "reference": "7396737bd8da9612d527719cb7f62991eb598c53",
                 "shasum": ""
             },
             "require": {
-                "league/container": "^2.3",
-                "php": "^7.0",
-                "psr/container": "^1.0"
+                "container-interop/container-interop": "^1.1",
+                "php": "^7.0"
             },
             "require-dev": {
                 "mockery/mockery": "^0.9",
@@ -96,24 +95,23 @@
             ],
             "description": "Php Container module for bytic framework",
             "homepage": "https://github.com/ByTIC/view",
-            "time": "2018-01-23T17:22:39+00:00"
+            "time": "2018-02-10T21:01:55+00:00"
         },
         {
             "name": "bytic/inflector",
-            "version": "1.0.2",
+            "version": "0.9.3",
             "source": {
                 "type": "git",
                 "url": "https://github.com/bytic/inflector.git",
-                "reference": "1dfb731f3b65c9db191f6c726321f1d2d22a235e"
+                "reference": "17d5afc2e1f4f17b9a4bd2f954233dcda8d10975"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/bytic/inflector/zipball/1dfb731f3b65c9db191f6c726321f1d2d22a235e",
-                "reference": "1dfb731f3b65c9db191f6c726321f1d2d22a235e",
+                "url": "https://api.github.com/repos/bytic/inflector/zipball/17d5afc2e1f4f17b9a4bd2f954233dcda8d10975",
+                "reference": "17d5afc2e1f4f17b9a4bd2f954233dcda8d10975",
                 "shasum": ""
             },
             "require": {
-                "bytic/container": "^1.0",
                 "php": "^7.0"
             },
             "require-dev": {
@@ -145,7 +143,7 @@
             ],
             "description": "Php Framework",
             "homepage": "https://github.com/bytic/inflector",
-            "time": "2018-02-02T10:44:54+00:00"
+            "time": "2018-02-09T20:59:26+00:00"
         },
         {
             "name": "container-interop/container-interop",
@@ -177,71 +175,6 @@
             "description": "Promoting the interoperability of container objects (DIC, SL, etc.)",
             "homepage": "https://github.com/container-interop/container-interop",
             "time": "2017-02-14T19:40:03+00:00"
-        },
-        {
-            "name": "league/container",
-            "version": "2.4.1",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/thephpleague/container.git",
-                "reference": "43f35abd03a12977a60ffd7095efd6a7808488c0"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/thephpleague/container/zipball/43f35abd03a12977a60ffd7095efd6a7808488c0",
-                "reference": "43f35abd03a12977a60ffd7095efd6a7808488c0",
-                "shasum": ""
-            },
-            "require": {
-                "container-interop/container-interop": "^1.2",
-                "php": "^5.4.0 || ^7.0"
-            },
-            "provide": {
-                "container-interop/container-interop-implementation": "^1.2",
-                "psr/container-implementation": "^1.0"
-            },
-            "replace": {
-                "orno/di": "~2.0"
-            },
-            "require-dev": {
-                "phpunit/phpunit": "4.*"
-            },
-            "type": "library",
-            "extra": {
-                "branch-alias": {
-                    "dev-2.x": "2.x-dev",
-                    "dev-1.x": "1.x-dev"
-                }
-            },
-            "autoload": {
-                "psr-4": {
-                    "League\\Container\\": "src"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "authors": [
-                {
-                    "name": "Phil Bennett",
-                    "email": "philipobenito@gmail.com",
-                    "homepage": "http://www.philipobenito.com",
-                    "role": "Developer"
-                }
-            ],
-            "description": "A fast and intuitive dependency injection container.",
-            "homepage": "https://github.com/thephpleague/container",
-            "keywords": [
-                "container",
-                "dependency",
-                "di",
-                "injection",
-                "league",
-                "provider",
-                "service"
-            ],
-            "time": "2017-05-10T09:20:27+00:00"
         },
         {
             "name": "psr/container",
