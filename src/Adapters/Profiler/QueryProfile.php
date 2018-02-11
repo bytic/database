@@ -5,10 +5,10 @@ namespace Nip\Database\Adapters\Profiler;
 use Nip\Profiler\Profile;
 
 /**
- * Class Query
+ * Class QueryProfile
  * @package Nip\Database\Adapters\Profiler
  */
-class Query extends Profile
+class QueryProfile extends Profile
 {
     public $query;
     public $type;

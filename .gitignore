@@ -1,5 +1,3 @@
-
-
-tests/_output/*
-vendor/*
 .idea/workspace.xml
+/.idea/dataSources/*
+vendor/*

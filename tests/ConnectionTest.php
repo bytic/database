@@ -8,28 +8,21 @@ use Nip\Database\Connection;
 /**
  * Class ConnectionTest
  * @package Nip\Database\Tests
+ *
+ * @property Connection $object
  */
 class ConnectionTest extends AbstractTest
 {
-    /**
-     * @var \UnitTester
-     */
-    protected $tester;
-
-    /**
-     * @var Connection
-     */
-    protected $_object;
 
     public function testNewAdapter()
     {
-        static::assertInstanceOf(MySQLi::class, $this->_object->newAdapter('MySQLi'));
+        static::assertInstanceOf(MySQLi::class, $this->object->newAdapter('MySQLi'));
     }
 
     public function testGetAdapterClass()
     {
-        static::assertEquals('\Nip\Database\Adapters\MySQL', $this->_object->getAdapterClass('MySQL'));
-        static::assertEquals('\Nip\Database\Adapters\MySQLi', $this->_object->getAdapterClass('MySQLi'));
+        static::assertEquals('\Nip\Database\Adapters\MySQL', $this->object->getAdapterClass('MySQL'));
+        static::assertEquals('\Nip\Database\Adapters\MySQLi', $this->object->getAdapterClass('MySQLi'));
     }
 
     /**
@@ -54,12 +47,12 @@ class ConnectionTest extends AbstractTest
      */
     public function testNewQuery($type, $class)
     {
-        $query = $this->_object->newQuery($type);
+        $query = $this->object->newQuery($type);
         static::assertInstanceOf($class, $query);
     }
 
     protected function setUp()
     {
-        $this->_object = new Connection();
+        $this->object = new Connection();
     }
 }

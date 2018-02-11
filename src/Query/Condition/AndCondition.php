@@ -2,6 +2,10 @@
 
 namespace Nip\Database\Query\Condition;
 
+/**
+ * Class AndCondition
+ * @package Nip\Database\Query\Condition
+ */
 class AndCondition extends Condition
 {
     protected $_condition;

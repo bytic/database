@@ -44,6 +44,10 @@ class MySQLi extends AbstractAdapter implements AdapterInterface
         return false;
     }
 
+    /**
+     * @param $database
+     * @return bool
+     */
     public function selectDatabase($database)
     {
         return mysqli_select_db($this->_connection, $database);

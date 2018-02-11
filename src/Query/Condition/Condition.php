@@ -4,6 +4,10 @@ namespace Nip\Database\Query\Condition;
 
 use Nip\Database\Query\AbstractQuery as Query;
 
+/**
+ * Class Condition
+ * @package Nip\Database\Query\Condition
+ */
 class Condition
 {
     protected $_string;
@@ -16,11 +20,17 @@ class Condition
         $this->_values = $values;
     }
 
+    /**
+     * @return string
+     */
     public function __toString()
     {
         return $this->getString();
     }
 
+    /**
+     * @return string
+     */
     public function getString()
     {
         return $this->parseString($this->_string, $this->_values);
