@@ -5,6 +5,6 @@ namespace Nip\Database;
 /**
  * Class Exception.
  */
-class Exception extends \Nip\Logger\Exception
+class Exception extends \Exception
 {
 }
