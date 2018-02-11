@@ -29,6 +29,7 @@
     "php": "^7.0",
     "bytic/inflector": "^0.9",
     "bytic/container": "^0.9",
+    "bytic/cache": "^0.9",
     "bytic/collections": "^1.0",
     "bytic/profiler": "^0.9"
   },

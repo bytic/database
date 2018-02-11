@@ -4,8 +4,55 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "content-hash": "faa4e493f96d44dd0d2cedc5d5093610",
+    "content-hash": "20cec47b0c78bb3e51909c88dd49f56b",
     "packages": [
+        {
+            "name": "bytic/cache",
+            "version": "0.9.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/bytic/cache.git",
+                "reference": "d9a7335ca6fbf2a8f7d2db0c35b7204c6aec4c60"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/bytic/cache/zipball/d9a7335ca6fbf2a8f7d2db0c35b7204c6aec4c60",
+                "reference": "d9a7335ca6fbf2a8f7d2db0c35b7204c6aec4c60",
+                "shasum": ""
+            },
+            "require": {
+                "bytic/filesystem": "^0.9",
+                "php": "^7.0"
+            },
+            "require-dev": {
+                "mockery/mockery": "^0.9",
+                "phpunit/phpunit": "^6.2",
+                "squizlabs/php_codesniffer": "^3.0"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Nip\\Cache\\": "src"
+                },
+                "classmap": [
+                    "src"
+                ],
+                "files": []
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Gabriel Solomon",
+                    "email": "hello@gabrielsolomon.ro"
+                }
+            ],
+            "description": "Cache module for bytic framework",
+            "homepage": "https://github.com/bytic/cache",
+            "time": "2018-02-11T11:54:46+00:00"
+        },
         {
             "name": "bytic/collections",
             "version": "1.0.0",
@@ -96,6 +143,52 @@
             "description": "Php Container module for bytic framework",
             "homepage": "https://github.com/ByTIC/view",
             "time": "2018-02-10T21:01:55+00:00"
+        },
+        {
+            "name": "bytic/filesystem",
+            "version": "0.9.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/bytic/filesystem.git",
+                "reference": "eec779e3028763e18d5ad22456a08dbdc54218fb"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/bytic/filesystem/zipball/eec779e3028763e18d5ad22456a08dbdc54218fb",
+                "reference": "eec779e3028763e18d5ad22456a08dbdc54218fb",
+                "shasum": ""
+            },
+            "require": {
+                "php": "^7.0"
+            },
+            "require-dev": {
+                "mockery/mockery": "^0.9",
+                "phpunit/phpunit": "^6.2",
+                "squizlabs/php_codesniffer": "^3.0"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Nip\\Filesystem\\": "src"
+                },
+                "classmap": [
+                    "src"
+                ],
+                "files": []
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Gabriel Solomon",
+                    "email": "hello@gabrielsolomon.ro"
+                }
+            ],
+            "description": "filesystem module for bytic framework",
+            "homepage": "https://github.com/bytic/filesystem",
+            "time": "2018-02-11T11:52:03+00:00"
         },
         {
             "name": "bytic/inflector",
