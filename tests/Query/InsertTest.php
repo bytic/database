@@ -3,7 +3,7 @@
 namespace Nip\Database\Tests\Query;
 
 use Mockery as m;
-use Nip\Database\Connection;
+use Nip\Database\Connections\Connection;
 use Nip\Database\Query\Insert;
 use Nip\Database\Tests\AbstractTest;
 

@@ -15,7 +15,7 @@ class Manager
     }
 
     /**
-     * @return \Nip\Database\Connection
+     * @return \Nip\Database\Connections\Connection
      */
     public function getConnection()
     {

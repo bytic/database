@@ -2,7 +2,7 @@
 
 namespace Nip\Database\Query;
 
-use Nip\Database\Connection;
+use Nip\Database\Connections\Connection;
 use Nip\Database\Query\Condition\Condition;
 use Nip\Database\Result;
 

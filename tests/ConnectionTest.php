@@ -3,7 +3,7 @@
 namespace Nip\Database\Tests;
 
 use Nip\Database\Adapters\MySQLi;
-use Nip\Database\Connection;
+use Nip\Database\Connections\Connection;
 
 /**
  * Class ConnectionTest

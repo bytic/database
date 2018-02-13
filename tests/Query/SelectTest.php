@@ -4,7 +4,7 @@ namespace Nip\Database\Tests\Query;
 
 use Mockery as m;
 use Nip\Database\Adapters\MySQLi;
-use Nip\Database\Connection;
+use Nip\Database\Connections\Connection;
 use Nip\Database\Query\Condition\Condition;
 use Nip\Database\Query\Select;
 use Nip\Database\Tests\AbstractTest;

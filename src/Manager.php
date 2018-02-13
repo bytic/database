@@ -3,6 +3,7 @@
 namespace Nip\Database;
 
 use Nip\Application as Bootstrap;
+use Nip\Database\Connections\Connection;
 
 /**
  * Class Manager.
@@ -69,7 +70,7 @@ class Manager
      */
     public function newConnection()
     {
-        return new \Nip\Database\Connection();
+        return new Connection();
     }
 
     /**

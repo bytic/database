@@ -3,7 +3,7 @@
 namespace Nip\Database\Tests\Query\Condition;
 
 use Mockery as m;
-use Nip\Database\Connection;
+use Nip\Database\Connections\Connection;
 use Nip\Database\Query\Select as SelectQuery;
 use Nip\Database\Tests\AbstractTest;
 

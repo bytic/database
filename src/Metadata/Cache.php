@@ -3,7 +3,7 @@
 namespace Nip\Database\Metadata;
 
 use Nip\Cache\Manager as CacheManager;
-use Nip\Database\Connection;
+use Nip\Database\Connections\Connection;
 
 /**
  * Class Cache.
