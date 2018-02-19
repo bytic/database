@@ -8,7 +8,7 @@ namespace Nip\Database\Adapters;
  */
 class MySQLi extends AbstractAdapter implements AdapterInterface
 {
-    protected $_connection;
+    protected $connection;
 
     /**
      * Connects to MySQL server.
@@ -22,14 +22,14 @@ class MySQLi extends AbstractAdapter implements AdapterInterface
      */
     public function connect($host = false, $user = false, $password = false, $database = false, $newLink = false)
     {
-        $this->_connection = mysqli_connect($host, $user, $password, $newLink);
+        $this->connection = mysqli_connect($host, $user, $password, $newLink);
 
-        if ($this->_connection) {
+        if ($this->connection) {
             if ($this->selectDatabase($database)) {
                 $this->query('SET CHARACTER SET utf8');
                 $this->query('SET NAMES utf8');
 
-                return $this->_connection;
+                return $this->connection;
             } else {
                 $message = 'Cannot select database '.$database;
             }
@@ -37,7 +37,7 @@ class MySQLi extends AbstractAdapter implements AdapterInterface
             $message = mysqli_error();
         }
 
-        if (!$this->_connection) {
+        if (!$this->connection) {
             trigger_error($message, E_USER_WARNING);
         }
 
@@ -50,7 +50,7 @@ class MySQLi extends AbstractAdapter implements AdapterInterface
      */
     public function selectDatabase($database)
     {
-        return mysqli_select_db($this->_connection, $database);
+        return mysqli_select_db($this->connection, $database);
     }
 
     /**
@@ -60,22 +60,22 @@ class MySQLi extends AbstractAdapter implements AdapterInterface
      */
     public function query($sql)
     {
-        return mysqli_query($this->_connection, $sql);
+        return mysqli_query($this->connection, $sql);
     }
 
     public function lastInsertID()
     {
-        return mysqli_insert_id($this->_connection);
+        return mysqli_insert_id($this->connection);
     }
 
     public function affectedRows()
     {
-        return mysqli_affected_rows($this->_connection);
+        return mysqli_affected_rows($this->connection);
     }
 
     public function info()
     {
-        return mysqli_info($this->_connection);
+        return mysqli_info($this->connection);
     }
 
     public function fetchObject($result)
@@ -166,16 +166,16 @@ class MySQLi extends AbstractAdapter implements AdapterInterface
 
     public function cleanData($data)
     {
-        return mysqli_real_escape_string($this->_connection, $data);
+        return mysqli_real_escape_string($this->connection, $data);
     }
 
     public function error()
     {
-        return mysqli_error($this->_connection);
+        return mysqli_error($this->connection);
     }
 
     public function disconnect()
     {
-        mysqli_close($this->_connection);
+        mysqli_close($this->connection);
     }
 }
