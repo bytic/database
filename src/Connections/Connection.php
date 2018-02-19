@@ -6,7 +6,10 @@ use Nip\Database\Exception;
 use Nip\Database\Metadata\Manager as MetadataManager;
 use Nip\Database\Adapters\HasAdapterTrait;
 use Nip\Database\Query\AbstractQuery as AbstractQuery;
+use Nip\Database\Query\Delete as DeleteQuery;
+use Nip\Database\Query\Insert as InsertQuery;
 use Nip\Database\Query\Select as SelectQuery;
+use Nip\Database\Query\Update as UpdateQuery;
 use Nip\Database\Result;
 
 /**
@@ -98,9 +101,31 @@ class Connection
     }
 
     /**
+     * @return InsertQuery
+     */
+    public function newInsert()
+    {
+        return $this->newQuery('insert');
+    }
+    /**
+     * @return UpdateQuery
+     */
+    public function newUpdate()
+    {
+        return $this->newQuery('update');
+    }
+    /**
+     * @return DeleteQuery
+     */
+    public function newDelete()
+    {
+        return $this->newQuery('delete');
+    }
+
+    /**
      * @param string $type optional
      *
-     * @return AbstractQuery
+     * @return AbstractQuery|SelectQuery|UpdateQuery|InsertQuery|DeleteQuery
      */
     public function newQuery($type = 'select')
     {
