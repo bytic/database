@@ -2,9 +2,12 @@
 
 namespace Nip\Database\Connections;
 
-use Nip\Database\Adapters\AbstractAdapter;
+use Nip\Database\Exception;
+use Nip\Database\Metadata\Manager as MetadataManager;
+use Nip\Database\Adapters\HasAdapterTrait;
 use Nip\Database\Query\AbstractQuery as AbstractQuery;
 use Nip\Database\Query\Select as SelectQuery;
+use Nip\Database\Result;
 
 /**
  * Class Connection
@@ -12,11 +15,12 @@ use Nip\Database\Query\Select as SelectQuery;
  */
 class Connection
 {
-    protected $_adapter = null;
+    use HasAdapterTrait;
+
+    protected $metadata;
 
     protected $_connection;
     protected $_database;
-    protected $metadata;
     protected $_query;
     protected $_queries = [];
 
@@ -45,50 +49,6 @@ class Connection
         return $this;
     }
 
-    /**
-     * @return AbstractAdapter
-     */
-    public function getAdapter()
-    {
-        if ($this->_adapter == null) {
-            $this->initAdapter();
-        }
-
-        return $this->_adapter;
-    }
-
-    public function setAdapter($adapter)
-    {
-        $this->_adapter = $adapter;
-    }
-
-    public function initAdapter()
-    {
-        $this->setAdapterName('MySQLi');
-    }
-
-    public function setAdapterName($name)
-    {
-        $this->setAdapter($this->newAdapter($name));
-    }
-
-    /**
-     * @param $name
-     *
-     * @return AbstractAdapter
-     */
-    public function newAdapter($name)
-    {
-        $class = static::getAdapterClass($name);
-
-        return new $class();
-    }
-
-    public static function getAdapterClass($name)
-    {
-        return '\Nip\Database\Adapters\\'.$name;
-    }
-
     public function getDatabase()
     {
         return $this->_database;
@@ -103,12 +63,12 @@ class Connection
     }
 
     /**
-     * @return Metadata\Manager
+     * @return MetadataManager
      */
     public function getMetadata()
     {
         if (!$this->metadata) {
-            $this->metadata = new Metadata\Manager();
+            $this->metadata = new MetadataManager();
             $this->metadata->setConnection($this);
         }
 
@@ -130,7 +90,7 @@ class Connection
     /**
      * @param string $type optional
      *
-     * @return SelectQuery
+     * @return AbstractQuery|SelectQuery
      */
     public function newSelect()
     {
@@ -206,6 +166,10 @@ class Connection
         }
     }
 
+    /**
+     * @param $table
+     * @return mixed
+     */
     public function describeTable($table)
     {
         return $this->getAdapter()->describeTable($this->protect($table));
@@ -223,6 +187,9 @@ class Connection
         return str_replace('`*`', '*', '`'.str_replace('.', '`.`', $input).'`');
     }
 
+    /**
+     * @return array
+     */
     public function getQueries()
     {
         return $this->_queries;
