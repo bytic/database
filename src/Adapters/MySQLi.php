@@ -93,6 +93,10 @@ class MySQLi extends AbstractAdapter implements AdapterInterface
         return mysqli_free_result($result);
     }
 
+    /**
+     * @param $table
+     * @return array
+     */
     public function describeTable($table)
     {
         $return = ['fields' => [], 'indexes' => []];
@@ -100,7 +104,7 @@ class MySQLi extends AbstractAdapter implements AdapterInterface
         $result = $this->execute('SHOW INDEX IN '.$table);
         if (mysqli_num_rows($result)) {
             while ($row = $this->fetchAssoc($result)) {
-                if (!$return['indexes'][$row['Key_name']]) {
+                if (!isset($return['indexes'][$row['Key_name']])) {
                     $return['indexes'][$row['Key_name']] = [];
                 }
                 $return['indexes'][$row['Key_name']]['fields'][] = $row['Column_name'];
@@ -114,11 +118,14 @@ class MySQLi extends AbstractAdapter implements AdapterInterface
         if (mysqli_num_rows($result)) {
             while ($row = $this->fetchAssoc($result)) {
                 $return['fields'][$row['Field']] = [
-                    'field'          => $row['Field'],
-                    'type'           => $row['Type'],
-                    'primary'        => ($return['indexes']['PRIMARY']['fields'][0] == $row['Field']),
-                    'default'        => $row['Default'],
-                    'auto_increment' => ($row['Extra'] === 'auto_increment'),
+                    'field' => $row['Field'],
+                    'type' => $row['Type'],
+                    'primary' => (
+                        isset($return['indexes']['PRIMARY']['fields'][0])
+                        && $return['indexes']['PRIMARY']['fields'][0] == $row['Field']
+                    ),
+                    'default' => $row['Default'],
+                    'auto_increment' => ($row['Extra'] === 'auto_increment')
                 ];
             }
         }
@@ -126,11 +133,18 @@ class MySQLi extends AbstractAdapter implements AdapterInterface
         return $return;
     }
 
+    /**
+     * @param $result
+     * @return array|null
+     */
     public function fetchAssoc($result)
     {
         return mysqli_fetch_assoc($result);
     }
 
+    /**
+     * @return array
+     */
     public function getTables()
     {
         $return = [];
