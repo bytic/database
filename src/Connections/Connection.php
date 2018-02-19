@@ -3,7 +3,7 @@
 namespace Nip\Database\Connections;
 
 use Exception;
-use Nip\Database\Adapters\AbstractAdapter;
+use Nip\Database\Adapters\HasAdapterTrait;
 use Nip\Database\Metadata\Manager as MetadataManager;
 use Nip\Database\Query\AbstractQuery as AbstractQuery;
 use Nip\Database\Query\Delete as DeleteQuery;
@@ -18,6 +18,9 @@ use Nip\Database\Result;
  */
 class Connection
 {
+    use HasAdapterTrait;
+
+    protected $metadata;
 
     /**
      * The active PDO connection.
@@ -199,7 +202,7 @@ class Connection
     }
 
     /**
-     * @return SelectQuery
+     * @return AbstractQuery|SelectQuery
      */
     public function newSelect()
     {
@@ -295,6 +298,10 @@ class Connection
         }
     }
 
+    /**
+     * @param $table
+     * @return mixed
+     */
     /**
      * @param null|string $table
      * @return mixed
