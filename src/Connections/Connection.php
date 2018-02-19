@@ -20,8 +20,6 @@ class Connection
 {
     use HasAdapterTrait;
 
-    protected $metadata;
-
     /**
      * The active PDO connection.
      *
@@ -48,8 +46,6 @@ class Connection
      * @var array
      */
     protected $config = [];
-
-    protected $_adapter = null;
 
     protected $metadata;
 
@@ -106,59 +102,6 @@ class Connection
         }
 
         return $this;
-    }
-
-    /**
-     * @return AbstractAdapter
-     */
-    public function getAdapter()
-    {
-        if ($this->_adapter == null) {
-            $this->initAdapter();
-        }
-
-        return $this->_adapter;
-    }
-
-    /**
-     * @param AbstractAdapter $adapter
-     */
-    public function setAdapter($adapter)
-    {
-        $this->_adapter = $adapter;
-    }
-
-    public function initAdapter()
-    {
-        $this->setAdapterName('MySQLi');
-    }
-
-    /**
-     * @param string $name
-     */
-    public function setAdapterName($name)
-    {
-        $this->setAdapter($this->newAdapter($name));
-    }
-
-    /**
-     * @param $name
-     * @return AbstractAdapter
-     */
-    public function newAdapter($name)
-    {
-        $class = static::getAdapterClass($name);
-
-        return new $class();
-    }
-
-    /**
-     * @param $name
-     * @return string
-     */
-    public static function getAdapterClass($name)
-    {
-        return '\Nip\Database\Adapters\\' . $name;
     }
 
     /**
@@ -298,10 +241,6 @@ class Connection
         }
     }
 
-    /**
-     * @param $table
-     * @return mixed
-     */
     /**
      * @param null|string $table
      * @return mixed
