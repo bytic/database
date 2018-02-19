@@ -338,7 +338,10 @@ abstract class AbstractQuery
         if (isset($params['where']) && is_array($params['where'])) {
             foreach ($params['where'] as $condition) {
                 $condition = (array)$condition;
-                $this->where($condition[0], $condition[1]);
+                $this->where(
+                    $condition[0],
+                    isset($condition[1]) ? $condition[1] : null
+                );
             }
         }
     }
