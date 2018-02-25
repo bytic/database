@@ -15,6 +15,7 @@ class Cache extends CacheManager
     public function __construct()
     {
         $this->setTtl(10 * 24 * 60 * 60);
+        $this->setActive(true);
     }
 
     public function describeTable($table)
