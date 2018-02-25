@@ -11,9 +11,13 @@ use Nip\Database\Connections\Connection;
  */
 class Cache extends CacheManager
 {
-    protected $ttl = 10 * 24 * 60 * 60;
-    protected $active = true;
     protected $metadata;
+
+    public function __construct()
+    {
+        $this->setTtl(10 * 24 * 60 * 60);
+        $this->setActive(true);
+    }
 
     /**
      * @param $table
