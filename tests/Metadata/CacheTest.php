@@ -10,7 +10,6 @@ use Nip\Database\Tests\AbstractTest;
  */
 class CacheTest extends AbstractTest
 {
-
     public function testActiveByDefault()
     {
         $cache = new \Nip\Database\Metadata\Cache();
