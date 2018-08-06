@@ -9,7 +9,7 @@ use Nip\Database\Query\Select\Union;
  *
  * @method $this options() options(string $option = null)
  * @method $this setFrom() setFrom(string $table = null)
- * @method $this setOrder() setOrder(array|string $cols = null)
+ * @method $this setOrder() setOrder(array | string $cols = null)
  */
 class Select extends AbstractQuery
 {
@@ -269,7 +269,13 @@ class Select extends AbstractQuery
                 $joinType = isset($join[2]) ? $join[2] : '';
 
                 $result .= ($joinType ? ' '.strtoupper($joinType) : '').' JOIN ';
-                if (strpos($joinTable, '(') !== false) {
+                if ($joinTable instanceof AbstractQuery) {
+                    $result .= '('.$joinTable.')';
+                    if (empty($joinAlias)) {
+                        $joinAlias = 'join1';
+                    }
+                    $joinTable = $joinAlias;
+                } elseif (strpos($joinTable, '(') !== false) {
                     $result .= $joinTable;
                 } else {
                     $result .= $this->protect($joinTable);

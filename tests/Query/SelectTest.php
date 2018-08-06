@@ -1,11 +1,13 @@
 <?php
 
+/** @noinspection SqlResolve */
+/** @noinspection SqlNoDataSourceInspection */
+
 namespace Nip\Database\Tests\Query;
 
 use Mockery as m;
 use Nip\Database\Adapters\MySQLi;
 use Nip\Database\Connections\Connection;
-use Nip\Database\Query\Condition\Condition;
 use Nip\Database\Query\Select;
 use Nip\Database\Tests\AbstractTest;
 
@@ -51,6 +53,87 @@ class SelectTest extends AbstractTest
             $this->object->assemble());
     }
 
+    public function testWhereOrWhere()
+    {
+        $this->object->cols('id, name')->from('table x');
+        $this->object->where('id = 5')->orWhere('id = 7');
+        static::assertEquals(
+            "SELECT id, name FROM table x WHERE id = 5 OR id = 7",
+            $this->object->assemble()
+        );
+    }
+
+    public function testInitializeCondition()
+    {
+        $condition = $this->object->getCondition("lorem ipsum");
+        static::assertThat($condition, $this->isInstanceOf("Nip\Database\Query\Condition\Condition"));
+    }
+
+    public function testNested()
+    {
+        $this->object->from("table1");
+
+        $query = $this->connection->newQuery();
+        $query->from("table2");
+        $query->where("id != 5");
+
+        $this->object->where("id NOT IN ?", $query);
+
+        static::assertEquals(
+            "SELECT * FROM `table1` WHERE id NOT IN (SELECT * FROM `table2` WHERE id != 5)",
+            $this->object->assemble()
+        );
+    }
+
+    public function testUnion()
+    {
+        $this->object->from("table1");
+
+        $query = $this->connection->newQuery();
+        $query->from("table2");
+
+        $union = $this->object->union($query);
+
+        static::assertEquals("SELECT * FROM `table1` UNION SELECT * FROM `table2`", $union->assemble());
+    }
+
+    public function testJoinTableName()
+    {
+        $this->object->from("table1");
+        $this->object->join("table2", ['id', 'id_table1']);
+
+        static::assertEquals(
+            "SELECT * FROM `table1` JOIN `table2` ON `table1`.`id` = `table2`.`id_table1`",
+            $this->object->assemble()
+        );
+    }
+
+    public function testJoinTableNameWithAlias()
+    {
+        $this->object->from("table1");
+        $this->object->join(["table2", "alias"], ['id', 'id_table1']);
+
+        static::assertEquals(
+            "SELECT * FROM `table1` JOIN `table2` AS `alias` ON `table1`.`id` = `table2`.`id_table1`",
+            $this->object->assemble()
+        );
+    }
+
+    public function testJoinSubQuery()
+    {
+        $this->object->from("table1");
+
+        $query = $this->connection->newQuery();
+        $query->from("table2");
+
+        $this->object->join([$query, "alias"], ['id', 'id_table1']);
+
+        static::assertEquals(
+            'SELECT * FROM `table1` JOIN (SELECT * FROM `table2`) AS `alias` ON `table1`.`id` = `alias`.`id_table1`',
+            $this->object->assemble()
+        );
+    }
+
     public function testHasPart()
     {
         $this->object->cols('id, name');
@@ -83,52 +166,6 @@ class SelectTest extends AbstractTest
         static::assertEquals(
             "SELECT id, name FROM table x WHERE id = 5 AND active = 'yes' LIMIT 5,10",
             $this->object->assemble()
-        );
-    }
-
-    public function testWhereOrWhere()
-    {
-        $this->object->cols('id, name')->from('table x');
-        $this->object->where('id = 5')->orWhere('id = 7');
-        static::assertEquals(
-            'SELECT id, name FROM table x WHERE id = 5 OR id = 7',
-            $this->object->assemble());
-    }
-
-    public function testInitializeCondition()
-    {
-        $condition = $this->object->getCondition('lorem ipsum');
-        static::assertInstanceOf(Condition::class, $condition);
-    }
-
-    public function testNested()
-    {
-        $this->object->from('table1');
-
-        $query = $this->connection->newQuery();
-        $query->from('table2');
-        $query->where('id != 5');
-
-        $this->object->where('id NOT IN ?', $query);
-
-        static::assertEquals(
-            'SELECT * FROM `table1` WHERE id NOT IN (SELECT * FROM `table2` WHERE id != 5)',
-            $this->object->assemble()
-        );
-    }
-
-    public function testUnion()
-    {
-        $this->object->from("table1");
-
-        $query = $this->connection->newQuery();
-        $query->from("table2");
-
-        $union = $this->object->union($query);
-
-        static::assertEquals(
-            "SELECT * FROM `table1` UNION SELECT * FROM `table2`",
-            $union->assemble()
         );
     }
 

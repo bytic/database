@@ -1,3 +1,4 @@
 .idea/workspace.xml
 /.idea/dataSources/*
 vendor/*
+.idea/dataSources.local.xml
