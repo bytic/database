@@ -1,5 +1,9 @@
 <?php
 
+/** @noinspection SqlResolve */
+
+/** @noinspection SqlNoDataSourceInspection */
+
 namespace Nip\Database\Tests\Query;
 
 use Mockery as m;
@@ -101,6 +105,43 @@ class SelectTest extends AbstractTest
         $union = $this->selectQuery->union($query);
 
         static::assertEquals("SELECT * FROM `table1` UNION SELECT * FROM `table2`", $union->assemble());
+    }
+
+    public function testJoinTableName()
+    {
+        $this->selectQuery->from("table1");
+        $this->selectQuery->join("table2", ['id', 'id_table1']);
+
+        static::assertEquals(
+            "SELECT * FROM `table1` JOIN `table2` ON `table1`.`id` = `table2`.`id_table1`",
+            $this->selectQuery->assemble()
+        );
+    }
+
+    public function testJoinTableNameWithAlias()
+    {
+        $this->selectQuery->from("table1");
+        $this->selectQuery->join(["table2", "alias"], ['id', 'id_table1']);
+
+        static::assertEquals(
+            "SELECT * FROM `table1` JOIN `table2` AS `alias` ON `table1`.`id` = `table2`.`id_table1`",
+            $this->selectQuery->assemble()
+        );
+    }
+
+    public function testJoinSubQuery()
+    {
+        $this->selectQuery->from("table1");
+
+        $query = $this->connection->newQuery();
+        $query->from("table2");
+
+        $this->selectQuery->join([$query, "alias"], ['id', 'id_table1']);
+
+        static::assertEquals(
+            'SELECT * FROM `table1` JOIN (SELECT * FROM `table2`) AS `alias` ON `table1`.`id` = `alias`.`id_table1`',
+            $this->selectQuery->assemble()
+        );
     }
 
     public function testHasPart()
