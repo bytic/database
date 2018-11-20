@@ -63,5 +63,4 @@ trait HasAdapterTrait
     {
         return '\Nip\Database\Adapters\\'.$name;
     }
-
 }
