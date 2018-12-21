@@ -4,6 +4,7 @@ namespace Nip\Database\Metadata;
 
 use Nip\Cache\Manager as CacheManager;
 use Nip\Database\Connections\Connection;
+use Nip\Database\Connections\HasConnectionTrait;
 
 /**
  * Class Cache
@@ -85,7 +86,11 @@ class Cache extends CacheManager
      */
     public function reload($cacheId)
     {
-        return $this->saveData($cacheId, $this->generate($cacheId));
+        $data = $this->generate($cacheId);
+        if (isset($data['fields'])) {
+            return $this->saveData($cacheId, $data);
+        }
+        return false;
     }
 
     /**

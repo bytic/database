@@ -2,25 +2,22 @@
 
 namespace Nip\Database\Metadata;
 
+use Nip\Database\Connections\HasConnectionTrait;
+
+/**
+ * Class Manager
+ * @package Nip\Database\Metadata
+ */
 class Manager
 {
-    protected $_connection;
+    use HasConnectionTrait;
+
     protected $_cache;
 
-    public function setConnection($wrapper)
-    {
-        $this->_connection = $wrapper;
-        return $this;
-    }
-
     /**
-     * @return \Nip\Database\Connection
+     * @param $table
+     * @return bool|mixed
      */
-    public function getConnection()
-    {
-        return $this->_connection;
-    }
-
     public function describeTable($table)
     {
         $data = $this->getCache()->describeTable($table);
@@ -30,6 +27,9 @@ class Manager
         return $data;
     }
 
+    /**
+     * @return Cache
+     */
     public function getCache()
     {
         if (!$this->_cache) {
