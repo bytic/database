@@ -3,7 +3,7 @@
 namespace Nip\Database;
 
 use InvalidArgumentException;
-use Nip\Application\Application;
+use Nip\Application\ApplicationInterface;
 use Nip\Database\Connections\Connection;
 use Nip\Database\Connections\ConnectionFactory;
 use Nip_Helper_Arrays;
@@ -31,10 +31,10 @@ class DatabaseManager
 
     /**
      * DatabaseManager constructor.
-     * @param Application $application
+     * @param ApplicationInterface $application
      * @param ConnectionFactory $factory
      */
-    public function __construct(Application $application, ConnectionFactory $factory)
+    public function __construct(ApplicationInterface $application, ConnectionFactory $factory)
     {
         $this->application = $application;
         $this->factory = $factory;
