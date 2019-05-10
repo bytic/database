@@ -3,7 +3,7 @@
 namespace Nip\Database;
 
 use InvalidArgumentException;
-use Nip\Application;
+use Nip\Application\Application;
 use Nip\Database\Connections\Connection;
 use Nip\Database\Connections\ConnectionFactory;
 use Nip_Helper_Arrays;
