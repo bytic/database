@@ -171,6 +171,14 @@ trait HasConnections
             throw new InvalidArgumentException("Database [$name] not configured.");
         }
 
+        if ($config['user']) {
+            $config['username'] = $config['user'];
+        }
+
+        if ($config['name']) {
+            $config['database'] = $config['name'];
+        }
+
         return $config;
     }
 }
