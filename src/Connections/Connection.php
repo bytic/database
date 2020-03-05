@@ -2,9 +2,9 @@
 
 namespace Nip\Database\Connections;
 
+use Nip\Database\Adapters\HasAdapterTrait;
 use Nip\Database\Exception;
 use Nip\Database\Metadata\Manager as MetadataManager;
-use Nip\Database\Adapters\HasAdapterTrait;
 use Nip\Database\Query\AbstractQuery as AbstractQuery;
 use Nip\Database\Query\Delete as DeleteQuery;
 use Nip\Database\Query\Insert as InsertQuery;
@@ -20,6 +20,13 @@ class Connection
 {
     use HasAdapterTrait;
 
+    /**
+     * The active PDO connection.
+     *
+     * @var PDO
+     */
+    protected $pdo;
+
     protected $metadata;
 
     protected $_connection;
@@ -28,13 +35,40 @@ class Connection
     protected $_queries = [];
 
     /**
+     * Create a new database connection instance.
+     *
+     * @param \PDO|\Closure $pdo
+     * @param string $database
+     * @param string $tablePrefix
+     * @param array $config
+     */
+    public function __construct($pdo, $database = '', $tablePrefix = '', $config = [])
+    {
+        $this->pdo = $pdo;
+
+        // First we will setup the default properties. We keep track of the DB
+        // name we are connected to since it is needed when some reflective
+        // type commands are run such as checking whether a table exists.
+        $this->database = $database;
+
+        $this->tablePrefix = $tablePrefix;
+        $this->config = $config;
+
+        // We need to initialize a query grammar and the query post processors
+        // which are both very important parts of the database abstractions
+        // so we initialize these to their default values while starting.
+//        $this->useDefaultQueryGrammar();
+//        $this->useDefaultPostProcessor();
+    }
+
+    /**
      * Connects to SQL server.
      *
      * @param string $host
      * @param string $user
      * @param string $password
      * @param string $database
-     * @param bool   $newLink
+     * @param bool $newLink
      *
      * @return static
      */
@@ -107,6 +141,7 @@ class Connection
     {
         return $this->newQuery('insert');
     }
+
     /**
      * @return UpdateQuery
      */
@@ -114,6 +149,7 @@ class Connection
     {
         return $this->newQuery('update');
     }
+
     /**
      * @return DeleteQuery
      */

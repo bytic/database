@@ -3,6 +3,7 @@
 namespace Nip\Database\Manager;
 
 use InvalidArgumentException;
+use Nip\Container\Container;
 use Nip\Database\Connections\Connection;
 use Nip\Utility\Arr;
 
@@ -22,7 +23,13 @@ trait HasConnections
      */
     public function connection($name = null)
     {
-        list($database, $type) = $this->parseConnectionName($name);
+        $connectionName = $this->parseConnectionName($name);
+        if (is_array($connectionName)) {
+            list($database, $type) = $connectionName;
+        } else {
+            $database = $connectionName;
+            $type = null;
+        }
         $name = $name ?: $database;
 
         // If we haven't created this connection, we'll create it based on the config
@@ -63,7 +70,8 @@ trait HasConnections
         if (!function_exists('config')) {
             return 'main';
         }
-        if (config()->has('database.default')) {
+
+        if (Container::getInstance() && config()->has('database.default')) {
             return config()->get('database.default');
         }
 

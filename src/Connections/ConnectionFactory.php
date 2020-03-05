@@ -67,8 +67,12 @@ class ConnectionFactory
     protected function createSingleConnection($config)
     {
         $pdo = false;
+        if (!isset($config['driver'])) {
+            $config['driver'] = 'mysql';
+        }
         $connection = $this->createConnection($config['driver'], $pdo, $config['database'], $config['prefix'], $config);
         $connection->connect($config['host'], $config['username'], $config['password'], $config['database']);
+
         return $connection;
     }
 
