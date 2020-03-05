@@ -2,7 +2,9 @@
 
 namespace Nip\Database\Manager;
 
+use InvalidArgumentException;
 use Nip\Database\Connections\Connection;
+use Nip\Utility\Arr;
 
 /**
  * Trait HasConnections
@@ -27,15 +29,21 @@ trait HasConnections
         // provided in the application. Once we've created the connections we will
         // set the "fetch mode" for PDO which determines the query return types.
         if (!isset($this->connections[$name])) {
-            $this->connections[$name] = $this->configure(
-                $connection = $this->makeConnection($name),
-                $type
-            );
+            $connection = $this->configure($this->makeConnection($name), $type);
+            $this->setConnection($connection, $name);
         }
 
         return $this->connections[$name];
     }
 
+    /**
+     * @param Connection $connection
+     * @param string $name
+     */
+    public function setConnection($connection, $name)
+    {
+        $this->connections[$name] = $connection;
+    }
 
     /**
      * @return array
@@ -151,9 +159,10 @@ trait HasConnections
         // If the configuration doesn't exist, we'll throw an exception and bail.
 
         $connections = config('database.connections');
-        if (is_null($config = Nip_Helper_Arrays::get($connections, $name))) {
+        if (is_null($config = Arr::get($connections, $name))) {
             throw new InvalidArgumentException("Database [$name] not configured.");
         }
+
         return $config;
     }
 }
