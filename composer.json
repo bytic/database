@@ -15,6 +15,7 @@
       "Nip\\Database\\": "src"
     },
     "classmap": [
+      "legacy",
       "src"
     ],
     "files": [
@@ -28,6 +29,7 @@
   "require": {
     "php": "^7.0",
     "bytic/inflector": "^0.9",
+    "bytic/application": "^0.9",
     "bytic/container": "^0.9",
     "bytic/cache": "^0.9",
     "bytic/collections": "^1.0",

@@ -2,20 +2,14 @@
 
 namespace Nip\Database;
 
-use Nip\Application as Bootstrap;
 use Nip\Database\Connections\Connection;
 
 /**
  * Class Manager.
+ * @deprecated use \Nip\Database\DatabaseManager
  */
-class Manager
+class Manager extends DatabaseManager
 {
-    /**
-     * @var Bootstrap
-     */
-    protected $bootstrap;
-
-    protected $connections = [];
 
     /**
      * @param $config
@@ -66,14 +60,6 @@ class Manager
     }
 
     /**
-     * @return Connection
-     */
-    public function newConnection()
-    {
-        return new Connection();
-    }
-
-    /**
      * @param $connection
      */
     public function initNewConnection($connection)
@@ -81,21 +67,5 @@ class Manager
         if ($this->getBootstrap()->getDebugBar()->isEnabled()) {
             $this->getBootstrap()->getDebugBar()->initDatabaseAdapter($connection->getAdapter());
         }
-    }
-
-    /**
-     * @return Bootstrap
-     */
-    public function getBootstrap()
-    {
-        return $this->bootstrap;
-    }
-
-    /**
-     * @param Bootstrap $bootstrap
-     */
-    public function setBootstrap($bootstrap)
-    {
-        $this->bootstrap = $bootstrap;
     }
 }

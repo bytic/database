@@ -7,7 +7,8 @@ use Nip\Database\Adapters\MySQLi;
 use Nip\Database\Query\AbstractQuery;
 
 /**
- * Class Result.
+ * Class Result
+ * @package Nip\Database
  */
 class Result
 {
