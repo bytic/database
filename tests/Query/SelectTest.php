@@ -178,7 +178,7 @@ class SelectTest extends AbstractTest
         $adapterMock->shouldReceive('cleanData')->andReturnUsing(function ($data) {
             return $data;
         });
-        $this->connection = new Connection();
+        $this->connection = new Connection(false);
         $this->connection->setAdapter($adapterMock);
         $this->object->setManager($this->connection);
     }

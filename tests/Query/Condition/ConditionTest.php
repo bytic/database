@@ -27,7 +27,7 @@ class ConditionTest extends AbstractTest
             return $data;
         });
 
-        $connection = new Connection();
+        $connection = new Connection(false);
         $connection->setAdapter($adapterMock);
         $this->query = $connection->newQuery();
     }

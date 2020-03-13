@@ -65,7 +65,7 @@ class InsertTest extends AbstractTest
         $adapterMock->shouldReceive('cleanData')->andReturnUsing(function ($data) {
             return $data;
         });
-        $manager = new Connection();
+        $manager = new Connection(false);
         $manager->setAdapter($adapterMock);
         $this->object->setManager($manager);
     }

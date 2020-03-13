@@ -53,6 +53,6 @@ class ConnectionTest extends AbstractTest
 
     protected function setUp()
     {
-        $this->object = new Connection();
+        $this->object = new Connection(false);
     }
 }
