@@ -68,4 +68,12 @@ class Manager extends DatabaseManager
             $this->getBootstrap()->getDebugBar()->initDatabaseAdapter($connection->getAdapter());
         }
     }
+
+    /**
+     * @return Connection
+     */
+    public function newConnection()
+    {
+        return new Connection(false);
+    }
 }

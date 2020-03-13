@@ -79,14 +79,6 @@ trait HasConnections
     }
 
     /**
-     * @return Connection
-     */
-    public function newConnection()
-    {
-        return new Connection();
-    }
-
-    /**
      * Parse the connection into an array of the name and read / write type.
      *
      * @param string $name
