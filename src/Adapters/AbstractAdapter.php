@@ -5,12 +5,11 @@ namespace Nip\Database\Adapters;
 use Nip\Database\Adapters\Profiler\Profiler;
 
 /**
- * Class AbstractAdapter
+ * Class AbstractAdapter.
  * @package Nip\Database\Adapters
  */
 abstract class AbstractAdapter
 {
-
     /**
      * @var null|Profiler
      */
@@ -40,7 +39,7 @@ abstract class AbstractAdapter
         if ($result !== false) {
             return $result;
         } else {
-            trigger_error($this->error() . " [$sql]", E_USER_WARNING);
+            trigger_error($this->error()." [$sql]", E_USER_WARNING);
         }
 
         return false;

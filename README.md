@@ -1,4 +1,4 @@
-# View
+# Database
 ByTIC Database component
 
 [![Latest Version on Packagist](https://img.shields.io/packagist/v/bytic/database.svg?style=flat-square)](https://packagist.org/packages/bytic/database)

@@ -14,16 +14,6 @@ use Nip\Database\Tests\AbstractTest;
 class ConditionTest extends AbstractTest
 {
     /**
-     * @var \UnitTester
-     */
-    protected $tester;
-
-    /**
-     * @var Connection
-     */
-    protected $connection;
-
-    /**
      * @var SelectQuery
      */
     protected $query;
@@ -37,24 +27,24 @@ class ConditionTest extends AbstractTest
             return $data;
         });
 
-        $this->connection = new Connection(false);
-        $this->connection->setAdapter($adapterMock);
-        $this->query = $this->connection->newQuery();
+        $connection = new Connection(false);
+        $connection->setAdapter($adapterMock);
+        $this->query = $connection->newQuery();
     }
 
     public function testParseString()
     {
-        $condition = $this->query->getCondition("name = value");
-        static::assertEquals("name = value", $condition->getString());
+        $condition = $this->query->getCondition('name = value');
+        static::assertEquals('name = value', $condition->getString());
 
-        $condition = $this->query->getCondition("id = ?", 5);
-        static::assertEquals("id = 5", $condition->getString());
+        $condition = $this->query->getCondition('id = ?', 5);
+        static::assertEquals('id = 5', $condition->getString());
 
-        $condition = $this->query->getCondition("MATCH title AGAINST (?)", "lorem ipsum");
+        $condition = $this->query->getCondition('MATCH title AGAINST (?)', 'lorem ipsum');
         static::assertEquals("MATCH title AGAINST ('lorem ipsum')", $condition->getString());
 
-        $condition = $this->query->getCondition("pos BETWEEN ? AND ?", [1, 10]);
-        static::assertEquals("pos BETWEEN 1 AND 10", $condition->getString());
+        $condition = $this->query->getCondition('pos BETWEEN ? AND ?', [1, 10]);
+        static::assertEquals('pos BETWEEN 1 AND 10', $condition->getString());
     }
 
     public function testAndConditions()
@@ -67,7 +57,7 @@ class ConditionTest extends AbstractTest
 
     public function testOrConditions()
     {
-        $condition = $this->query->getCondition("name LIKE '%lorem%'")->or_($this->query->getCondition("date > NOW()"));
+        $condition = $this->query->getCondition("name LIKE '%lorem%'")->or_($this->query->getCondition('date > NOW()'));
         static::assertEquals("name LIKE '%lorem%' OR date > NOW()", $condition->getString());
     }
 

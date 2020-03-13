@@ -2,6 +2,10 @@
 
 namespace Nip\Database\Adapters;
 
+/**
+ * Interface AdapterInterface
+ * @package Nip\Database\Adapters
+ */
 interface AdapterInterface
 {
     public function execute($sql);

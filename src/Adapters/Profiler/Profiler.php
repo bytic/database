@@ -12,7 +12,7 @@ class Profiler extends \Nip_Profiler
 
     /**
      * @param $id
-     * @return QueryProfile
+     * @return QueryProfile|\Nip\Profiler\Profile
      */
     public function newProfile($id)
     {
@@ -44,7 +44,6 @@ class Profiler extends \Nip_Profiler
 
         return true;
     }
-
 
     /**
      * @param null $queryTypes

@@ -67,8 +67,8 @@ class Select extends AbstractQuery
                 $match[] = $protected ? $this->protect($field) : $field;
             }
         }
-        $match = "MATCH(".implode(",",
-                $match).") AGAINST ('".$against."'".($boolean_mode ? " IN BOOLEAN MODE" : "").")";
+        $match = 'MATCH('.implode(',',
+                $match).") AGAINST ('".$against."'".($boolean_mode ? ' IN BOOLEAN MODE' : '').')';
 
         return $this->cols([$match, $alias, false])->where([$match]);
     }

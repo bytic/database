@@ -181,6 +181,7 @@ abstract class AbstractQuery
     /**
      * @param string $string
      * @param array $values
+     *
      * @return Condition
      */
     public function getCondition($string, $values = [])
@@ -253,6 +254,7 @@ abstract class AbstractQuery
     /**
      * @param $string
      * @param array $values
+     *
      * @return $this
      */
     public function orWhere($string, $values = [])
@@ -271,6 +273,7 @@ abstract class AbstractQuery
     /**
      * @param $string
      * @param array $values
+     *
      * @return $this
      */
     public function having($string, $values = [])
@@ -414,6 +417,7 @@ abstract class AbstractQuery
     /**
      * @param $name
      * @param $value
+     *
      * @return $this
      */
     protected function setPart($name, $value)
@@ -426,11 +430,12 @@ abstract class AbstractQuery
 
     /**
      * @return string
+     * @return mixed
      */
     protected function getTable()
     {
         if (!is_array($this->parts['table']) && count($this->parts['table']) < 1) {
-            trigger_error("No Table defined", E_USER_WARNING);
+            trigger_error('No Table defined', E_USER_WARNING);
         }
 
         return reset($this->parts['table']);
@@ -449,6 +454,7 @@ abstract class AbstractQuery
     }
 
     /**
+     * Parses ORDER BY entries.
      * Parses ORDER BY entries
      *
      * @return string
@@ -481,9 +487,10 @@ abstract class AbstractQuery
     }
 
     /**
-     * Adds backticks to input
+     * Adds backticks to input.
      *
      * @param string $input
+     *
      * @return string
      */
     protected function protect($input)

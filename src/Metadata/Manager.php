@@ -24,6 +24,7 @@ class Manager
         if (!is_array($data)) {
             return trigger_error("Cannot load metadata for table [$table]", E_USER_ERROR);
         }
+
         return $data;
     }
 

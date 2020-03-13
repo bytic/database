@@ -2,8 +2,8 @@
 
 namespace Nip\Database\Connections;
 
-use Exception;
 use Nip\Database\Adapters\HasAdapterTrait;
+use Nip\Database\Exception;
 use Nip\Database\Metadata\Manager as MetadataManager;
 use Nip\Database\Query\AbstractQuery as AbstractQuery;
 use Nip\Database\Query\Delete as DeleteQuery;
@@ -14,7 +14,7 @@ use Nip\Database\Result;
 
 /**
  * Class Connection
- * @package Nip\Database
+ * @package Nip\Database\Connections
  */
 class Connection
 {
@@ -88,6 +88,7 @@ class Connection
      * @param string $password
      * @param string $database
      * @param bool $newLink
+     *
      * @return static
      */
     public function connect($host, $user, $password, $database, $newLink = false)
@@ -145,6 +146,8 @@ class Connection
     }
 
     /**
+     * @param string $type optional
+     *
      * @return AbstractQuery|SelectQuery
      */
     public function newSelect()

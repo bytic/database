@@ -2,6 +2,7 @@
 
 namespace Nip\Database\Tests;
 
+use Nip\Database\Adapters\MySQLi;
 use Nip\Database\Connections\Connection;
 
 /**
@@ -51,6 +52,7 @@ class ConnectionTest extends AbstractTest
 
     /**
      * @dataProvider newQueryProvider
+     *
      * @param $type
      * @param $class
      */

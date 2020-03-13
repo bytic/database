@@ -18,13 +18,20 @@ class QueryProfile extends Profile
     public $affectedRows;
     public $columns = ['time', 'type', 'memory', 'query', 'affectedRows', 'info'];
 
+    /**
+     * @param null $name
+     */
     public function setName($name)
     {
         $this->query = $name;
         $this->type = $this->detectQueryType();
-        return parent::setName($name);
+
+        parent::setName($name);
     }
 
+    /**
+     * @return string
+     */
     public function detectQueryType()
     {
         // make sure we have a query type

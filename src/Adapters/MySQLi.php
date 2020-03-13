@@ -42,7 +42,10 @@ class MySQLi extends AbstractAdapter implements AdapterInterface
         }
     }
 
-
+    /**
+     * @param $database
+     * @return bool
+     */
     public function selectDatabase($database)
     {
         return mysqli_select_db($this->connection, $database);
@@ -109,11 +112,15 @@ class MySQLi extends AbstractAdapter implements AdapterInterface
         return mysqli_free_result($result);
     }
 
+    /**
+     * @param $table
+     * @return array
+     */
     public function describeTable($table)
     {
         $return = ['fields' => [], 'indexes' => []];
 
-        $result = $this->execute('SHOW INDEX IN ' . $table);
+        $result = $this->execute('SHOW INDEX IN '.$table);
         if (mysqli_num_rows($result)) {
             while ($row = $this->fetchAssoc($result)) {
                 if (!isset($return['indexes'][$row['Key_name']])) {
@@ -126,7 +133,7 @@ class MySQLi extends AbstractAdapter implements AdapterInterface
             }
         }
 
-        $result = $this->execute('DESCRIBE ' . $table);
+        $result = $this->execute('DESCRIBE '.$table);
         if (mysqli_num_rows($result)) {
             while ($row = $this->fetchAssoc($result)) {
                 $return['fields'][$row['Field']] = [

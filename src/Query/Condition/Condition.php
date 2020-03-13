@@ -5,6 +5,10 @@ namespace Nip\Database\Query\Condition;
 
 use Nip\Database\Query\AbstractQuery as Query;
 
+/**
+ * Class Condition
+ * @package Nip\Database\Query\Condition
+ */
 class Condition
 {
     protected $_string;
@@ -14,27 +18,34 @@ class Condition
     /**
      * @param string $string
      */
-    public function __construct($string, $values = array())
+    public function __construct($string, $values = [])
     {
         $this->_string = $string;
         $this->_values = $values;
     }
 
+    /**
+     * @return string
+     */
     public function __toString()
     {
         return $this->getString();
     }
 
+    /**
+     * @return string
+     */
     public function getString()
     {
         return $this->parseString($this->_string, $this->_values);
     }
 
     /**
-     * Parses $string and replaces all instances of "?" with corresponding $values
+     * Parses $string and replaces all instances of "?" with corresponding $values.
      *
      * @param string $string
-     * @param array $values
+     * @param array  $values
+     *
      * @return string
      */
     public function parseString($string, $values)
@@ -51,7 +62,7 @@ class Condition
         $count = count($positions);
 
         if ($count == 1) {
-            $values = array($values);
+            $values = [$values];
         }
 
         for ($i = 0; $i < $count; $i++) {
@@ -66,7 +77,7 @@ class Condition
                         unset($value[$key]);
                     }
                 }
-                $value = "(" . implode(", ", $value) . ")";
+                $value = '('.implode(', ', $value).')';
             } elseif (is_numeric($value)) {
             } else {
                 $value = $this->getQuery()->getManager()->getAdapter()->quote($values[$i]);
@@ -122,6 +133,6 @@ class Condition
 
     public function protectCondition($condition)
     {
-        return strpos($condition, ' AND ') || strpos($condition, ' OR ') ? '(' . $condition . ')' : $condition;
+        return strpos($condition, ' AND ') || strpos($condition, ' OR ') ? '('.$condition.')' : $condition;
     }
 }
