@@ -278,14 +278,19 @@ abstract class AbstractQuery
      */
     public function having($string, $values = [])
     {
-        if ($string) {
-            if ($this->parts['having'] instanceof Condition) {
-                $this->parts['having'] = $this->parts['having']->and_($this->getCondition($string, $values));
-            } else {
-                $this->parts['having'] = $this->getCondition($string, $values);
-            }
+        if (empty($string)) {
+            return $this;
         }
 
+        $condition =  $this->getCondition($string, $values);
+        $having = $this->getPart('having');
+
+        if ($having instanceof Condition) {
+            $having = $having->and_($this->getCondition($string, $values));
+        } else {
+            $having = $condition;
+        }
+        $this->parts['having'] = $having;
         return $this;
     }
 
@@ -402,6 +407,9 @@ abstract class AbstractQuery
     public function hasPart($name)
     {
         if (!isset($this->parts[$name])) {
+            return false;
+        }
+        if ($this->parts[$name] === null) {
             return false;
         }
         if (is_array($this->parts[$name]) && count($this->parts[$name]) < 1) {
