@@ -26,8 +26,6 @@ class MySQLi extends AbstractAdapter implements AdapterInterface
 
         if ($this->connection) {
             if ($this->selectDatabase($database)) {
-                $this->query('SET CHARACTER SET utf8');
-                $this->query('SET NAMES utf8');
 
                 return $this->connection;
             } else {

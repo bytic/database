@@ -71,6 +71,10 @@ trait HasConnections
             return 'main';
         }
 
+        if (!Container::getInstance() || !Container::getInstance()->has('config')) {
+            return 'main';
+        }
+
         if (Container::getInstance() && config()->has('database.default')) {
             return config()->get('database.default');
         }

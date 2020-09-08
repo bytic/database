@@ -1,6 +1,7 @@
 .idea/workspace.xml
 .idea/dataSources/*
 .idea/dataSources.local.xml
+.phpunit.result.cache
 
 vendor
 
