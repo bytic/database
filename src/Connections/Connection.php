@@ -11,6 +11,7 @@ use Nip\Database\Query\Insert as InsertQuery;
 use Nip\Database\Query\Select as SelectQuery;
 use Nip\Database\Query\Update as UpdateQuery;
 use Nip\Database\Result;
+use PDO;
 
 /**
  * Class Connection
@@ -96,6 +97,11 @@ class Connection
         if (!$this->pdo) {
             try {
                 $this->pdo = $this->getAdapter()->connect($host, $user, $password, $database, $newLink);
+
+                if (isset($this->config['charset'])) {
+                    $this->getAdapter()->query('SET CHARACTER SET '.$this->config['charset']);
+                    $this->getAdapter()->query('SET NAMES '.$this->config['charset']);
+                }
                 $this->setDatabase($database);
             } catch (Exception $e) {
                 $e->log();

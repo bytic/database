@@ -27,7 +27,8 @@
     }
   },
   "require": {
-    "php": "^7.0",
+    "php": "^7.1",
+    "ext-pdo": "*",
     "bytic/inflector": "^1.0",
     "bytic/cache": "^1.0",
     "bytic/container": "^1.0",
@@ -36,9 +37,7 @@
     "bytic/profiler": "^1.0"
   },
   "require-dev": {
-    "squizlabs/php_codesniffer": "^3.0",
-    "phpunit/phpunit": "^7.2",
-    "mockery/mockery": "^1.0",
-    "bytic/application": "^1.0"
+    "phpunit/phpunit": "^7.2|^8.2|^9.0",
+    "mockery/mockery": "^1.0"
   }
 }

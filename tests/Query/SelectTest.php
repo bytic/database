@@ -193,7 +193,7 @@ class SelectTest extends AbstractTest
         );
     }
 
-    protected function setUp()
+    protected function setUp() : void
     {
         parent::setUp();
         $this->object = new Select();

@@ -18,7 +18,7 @@ class ConditionTest extends AbstractTest
      */
     protected $query;
 
-    public function setUp()
+    public function setUp() : void
     {
         parent::setUp();
 
