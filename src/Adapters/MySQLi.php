@@ -113,24 +113,15 @@ class MySQLi extends AbstractAdapter implements AdapterInterface
 
     /**
      * @param $table
-     * @return array
+     * @return array|false
      */
     public function describeTable($table)
     {
-        $return = ['fields' => [], 'indexes' => []];
-
-        $result = $this->execute('SHOW INDEX IN '.$table);
-        if (mysqli_num_rows($result)) {
-            while ($row = $this->fetchAssoc($result)) {
-                if (!isset($return['indexes'][$row['Key_name']])) {
-                    $return['indexes'][$row['Key_name']] = [];
-                }
-                $return['indexes'][$row['Key_name']]['fields'][] = $row['Column_name'];
-                $return['indexes'][$row['Key_name']]['unique'] = $row['Non_unique'] == '0';
-                $return['indexes'][$row['Key_name']]['fulltext'] = $row['Index_type'] == 'FULLTEXT';
-                $return['indexes'][$row['Key_name']]['type'] = $row['Index_type'];
-            }
+        if (!($this->connection instanceof \mysqli)) {
+            return false;
         }
+
+        $return = ['fields' => [], 'indexes' => []];
 
         $result = $this->execute('DESCRIBE '.$table);
         if (mysqli_num_rows($result)) {
@@ -145,6 +136,19 @@ class MySQLi extends AbstractAdapter implements AdapterInterface
                     'default' => $row['Default'],
                     'auto_increment' => ($row['Extra'] === 'auto_increment')
                 ];
+            }
+        }
+
+        $result = $this->execute('SHOW INDEX IN '.$table);
+        if (mysqli_num_rows($result)) {
+            while ($row = $this->fetchAssoc($result)) {
+                if (!isset($return['indexes'][$row['Key_name']])) {
+                    $return['indexes'][$row['Key_name']] = [];
+                }
+                $return['indexes'][$row['Key_name']]['fields'][] = $row['Column_name'];
+                $return['indexes'][$row['Key_name']]['unique'] = $row['Non_unique'] == '0';
+                $return['indexes'][$row['Key_name']]['fulltext'] = $row['Index_type'] == 'FULLTEXT';
+                $return['indexes'][$row['Key_name']]['type'] = $row['Index_type'];
             }
         }
 
