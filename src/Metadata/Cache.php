@@ -66,7 +66,7 @@ class Cache extends CacheManager
     public function reload($cacheId)
     {
         $data = $this->generate($cacheId);
-        if (isset($data['fields'])) {
+        if (is_array($data) && isset($data['fields'])) {
             return $this->saveData($cacheId, $data);
         }
         return false;

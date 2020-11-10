@@ -29,7 +29,8 @@
   "require": {
     "php": "^7.1",
     "ext-pdo": "*",
-    "bytic/inflector": "^0.9",
+    "ext-mysqli": "*",
+    "bytic/inflector": "^0.9|^1.0",
     "bytic/application": "^0.9",
     "bytic/container": "^0.9",
     "bytic/cache": "^0.9",
