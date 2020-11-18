@@ -30,14 +30,14 @@
     "php": "^7.1",
     "ext-pdo": "*",
     "ext-mysqli": "*",
-    "bytic/inflector": "^0.9|^1.0",
-    "bytic/application": "^0.9",
-    "bytic/container": "^0.9",
+    "bytic/inflector": "^1.0",
     "bytic/cache": "^0.9",
     "bytic/collections": "^1.0",
     "bytic/profiler": "^0.9"
   },
   "require-dev": {
+    "bytic/application": "^0.9",
+    "bytic/container": "^0.9|^1.0|^2.0",
     "phpunit/phpunit": "^7.2|^8.2|^9.0",
     "mockery/mockery": "^1.0"
   }
