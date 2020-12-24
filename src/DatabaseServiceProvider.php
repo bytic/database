@@ -37,9 +37,7 @@ class DatabaseServiceProvider extends AbstractServiceProvider
         // The database manager is used to resolve various connections, since multiple
         // connections might be managed. It also implements the connection resolver
         // interface which may be used by other components requiring connections.
-        $this->getContainer()->share('db', DatabaseManager::class)
-            ->withArgument(ApplicationInterface::class)
-            ->withArgument(ConnectionFactory::class);
+        $this->getContainer()->share('db', DatabaseManager::class);
 
         $this->getContainer()->share('db.connection', function () {
             return app('db')->connection();

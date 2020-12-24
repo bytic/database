@@ -49,7 +49,11 @@ class SelectTest extends AbstractTest
 
     public function testSimpleSelectDistinct()
     {
-        $this->selectQuery->cols('id, name')->options('distinct')->from('table x')->where('id = 5');
+        $this->selectQuery
+            ->cols('id, name')
+            ->options('distinct')
+            ->from('table x')
+            ->where('id = 5');
         static::assertEquals(
             "SELECT DISTINCT id, name FROM table x WHERE id = 5",
             $this->selectQuery->assemble()
@@ -78,6 +82,7 @@ class SelectTest extends AbstractTest
         static::assertEquals(
             "SELECT id, name FROM table x WHERE id = 5 OR id = 7",
             $this->selectQuery->assemble()
+        );
         $this->object->cols('id, name')->from('table x');
         $this->object->where('id = 5')->orWhere('id = 7');
         static::assertEquals(
@@ -198,12 +203,14 @@ class SelectTest extends AbstractTest
         parent::setUp();
         $this->object = new Select();
 
-        $adapterMock = m::mock(MySQLi::class)->shouldDeferMissing();
+        $adapterMock = m::mock(MySQLi::class)->makePartial();
         $adapterMock->shouldReceive('cleanData')->andReturnUsing(function ($data) {
             return $data;
         });
         $this->connection = new Connection(false);
         $this->connection->setAdapter($adapterMock);
         $this->object->setManager($this->connection);
+
+        $this->selectQuery = new Select();
     }
 }
