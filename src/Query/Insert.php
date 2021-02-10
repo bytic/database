@@ -31,7 +31,7 @@ class Insert extends AbstractQuery
      */
     public function parseCols()
     {
-        if (is_array($this->parts['data'][0])) {
+        if (isset($this->parts['data'][0]) && is_array($this->parts['data'][0])) {
             $this->setCols(array_keys($this->parts['data'][0]));
         }
         return $this->_cols ? ' (' . implode(',', array_map([$this, 'protect'], $this->_cols)) . ')' : '';
