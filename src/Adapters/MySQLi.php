@@ -27,7 +27,6 @@ class MySQLi extends AbstractAdapter implements AdapterInterface
 
         if ($this->connection) {
             if ($this->selectDatabase($database)) {
-
                 return $this->connection;
             } else {
                 $message = 'Cannot select database ' . $database;
@@ -123,7 +122,7 @@ class MySQLi extends AbstractAdapter implements AdapterInterface
 
         $return = ['fields' => [], 'indexes' => []];
 
-        $result = $this->execute('DESCRIBE '.$table);
+        $result = $this->execute('DESCRIBE ' . $table);
         if (mysqli_num_rows($result)) {
             while ($row = $this->fetchAssoc($result)) {
                 $return['fields'][$row['Field']] = [
@@ -139,7 +138,7 @@ class MySQLi extends AbstractAdapter implements AdapterInterface
             }
         }
 
-        $result = $this->execute('SHOW INDEX IN '.$table);
+        $result = $this->execute('SHOW INDEX IN ' . $table);
         if (mysqli_num_rows($result)) {
             while ($row = $this->fetchAssoc($result)) {
                 if (!isset($return['indexes'][$row['Key_name']])) {

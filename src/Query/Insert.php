@@ -1,6 +1,5 @@
 <?php
 
-
 namespace Nip\Database\Query;
 
 /**

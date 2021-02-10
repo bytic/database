@@ -12,8 +12,6 @@ use Nip\Database\Tests\AbstractTest;
  */
 class ProfilerTest extends AbstractTest
 {
-
-
     public function testNewProfile()
     {
         $profile = $this->object->newProfile(36);
@@ -21,7 +19,7 @@ class ProfilerTest extends AbstractTest
         self::assertInstanceOf(QueryProfile::class, $profile);
     }
 
-    protected function setUp() : void
+    protected function setUp(): void
     {
         parent::setUp();
         $this->object = new Profiler();

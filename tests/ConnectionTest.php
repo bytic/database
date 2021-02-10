@@ -62,7 +62,7 @@ class ConnectionTest extends AbstractTest
         static::assertInstanceOf($class, $query);
     }
 
-    protected function setUp() : void
+    protected function setUp(): void
     {
         parent::setUp();
         $this->connection = new Connection(false);

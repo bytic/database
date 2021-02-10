@@ -1,6 +1,5 @@
 <?php
 
-
 namespace Nip\Database\Query\Condition;
 
 use Nip\Database\Query\AbstractQuery as Query;
@@ -77,7 +76,7 @@ class Condition
                         unset($value[$key]);
                     }
                 }
-                $value = '('.implode(', ', $value).')';
+                $value = '(' . implode(', ', $value) . ')';
             } elseif (is_numeric($value)) {
             } else {
                 $value = $this->getQuery()->getManager()->getAdapter()->quote($values[$i]);
@@ -133,6 +132,6 @@ class Condition
 
     public function protectCondition($condition)
     {
-        return strpos($condition, ' AND ') || strpos($condition, ' OR ') ? '('.$condition.')' : $condition;
+        return strpos($condition, ' AND ') || strpos($condition, ' OR ') ? '(' . $condition . ')' : $condition;
     }
 }

@@ -99,8 +99,8 @@ class Connection
                 $this->pdo = $this->getAdapter()->connect($host, $user, $password, $database, $newLink);
 
                 if (isset($this->config['charset'])) {
-                    $this->getAdapter()->query('SET CHARACTER SET '.$this->config['charset']);
-                    $this->getAdapter()->query('SET NAMES '.$this->config['charset']);
+                    $this->getAdapter()->query('SET CHARACTER SET ' . $this->config['charset']);
+                    $this->getAdapter()->query('SET NAMES ' . $this->config['charset']);
                 }
                 $this->setDatabase($database);
             } catch (Exception $e) {

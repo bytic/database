@@ -24,7 +24,6 @@ use Nip\Database\Result;
  */
 abstract class AbstractQuery
 {
-
     /**
      * @var Connection
      */
@@ -245,7 +244,7 @@ abstract class AbstractQuery
     {
         $this->parts['limit'] = $start;
         if ($offset) {
-            $this->parts['limit'] .= ','.$offset;
+            $this->parts['limit'] .= ',' . $offset;
         }
 
         return $this;
@@ -485,7 +484,7 @@ abstract class AbstractQuery
                 $type = isset($itemOrder[1]) ? $itemOrder[1] : '';
                 $protected = isset($itemOrder[2]) ? $itemOrder[2] : true;
 
-                $column = ($protected ? $this->protect($column) : $column).' '.strtoupper($type);
+                $column = ($protected ? $this->protect($column) : $column) . ' ' . strtoupper($type);
 
                 $orderParts[] = trim($column);
             }
@@ -503,8 +502,11 @@ abstract class AbstractQuery
      */
     protected function protect($input)
     {
-        return strpos($input, '(') !== false ? $input : str_replace("`*`", "*",
-            '`'.str_replace('.', '`.`', $input).'`');
+        return strpos($input, '(') !== false ? $input : str_replace(
+            "`*`",
+            "*",
+            '`' . str_replace('.', '`.`', $input) . '`'
+        );
     }
 
     /**

@@ -10,7 +10,6 @@ use Nip\Database\Connections\Connection;
  */
 class Manager extends DatabaseManager
 {
-
     /**
      * @param $config
      *
@@ -23,7 +22,8 @@ class Manager extends DatabaseManager
             $config->host,
             $config->user,
             $config->password,
-            $config->name);
+            $config->name
+        );
 
         return $connection;
     }
@@ -50,7 +50,7 @@ class Manager extends DatabaseManager
         } catch (Exception $e) {
             echo '<h1>Error connecting to database</h1>';
             if (app()->get('staging')->getStage()->inTesting()) {
-                echo '<h4>'.$e->getMessage().'</h4>';
+                echo '<h4>' . $e->getMessage() . '</h4>';
                 $e->log();
             }
             die();

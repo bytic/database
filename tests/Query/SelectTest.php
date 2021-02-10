@@ -72,7 +72,8 @@ class SelectTest extends AbstractTest
         $this->object->where('id = 5')->where("active = 'yes'");
         static::assertEquals(
             "SELECT id, name FROM table x WHERE id = 5 AND active = 'yes'",
-            $this->object->assemble());
+            $this->object->assemble()
+        );
     }
 
     public function testWhereOrWhere()
@@ -198,7 +199,7 @@ class SelectTest extends AbstractTest
         );
     }
 
-    protected function setUp() : void
+    protected function setUp(): void
     {
         parent::setUp();
         $this->object = new Select();
