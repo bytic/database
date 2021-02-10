@@ -61,7 +61,6 @@ trait HasAdapterTrait
      */
     public static function getAdapterClass($name)
     {
-        return '\Nip\Database\Adapters\\'.$name;
+        return '\Nip\Database\Adapters\\' . $name;
     }
-
 }

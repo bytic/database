@@ -10,7 +10,6 @@ use PDO;
  */
 class MySqlConnector extends Connector
 {
-
     /**
      * Establish a database connection.
      *
@@ -79,7 +78,7 @@ class MySqlConnector extends Connector
         }
 
         $connection->prepare(
-            "set names '{$config['charset']}'".$this->getCollation($config)
+            "set names '{$config['charset']}'" . $this->getCollation($config)
         )->execute();
     }
 
@@ -104,7 +103,7 @@ class MySqlConnector extends Connector
     protected function configureTimezone($connection, array $config)
     {
         if (isset($config['timezone'])) {
-            $connection->prepare('set time_zone="'.$config['timezone'].'"')->execute();
+            $connection->prepare('set time_zone="' . $config['timezone'] . '"')->execute();
         }
     }
 

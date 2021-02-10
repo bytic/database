@@ -196,13 +196,13 @@ class ConnectionFactory
 
         switch ($config['driver']) {
             case 'mysql':
-                return new MySqlConnector;
+                return new MySqlConnector();
             case 'pgsql':
-                return new PostgresConnector;
+                return new PostgresConnector();
             case 'sqlite':
-                return new SQLiteConnector;
+                return new SQLiteConnector();
             case 'sqlsrv':
-                return new SqlServerConnector;
+                return new SqlServerConnector();
         }
 
         throw new InvalidArgumentException("Unsupported driver [{$config['driver']}].");

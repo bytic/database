@@ -8,7 +8,6 @@ namespace Nip\Database\Query;
  */
 class Delete extends AbstractQuery
 {
-
     /**
      * Joins together DELETE, FROM, WHERE, ORDER, and LIMIT parts of SQL query
      * @return string

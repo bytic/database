@@ -10,7 +10,6 @@ use Nip\Application;
  */
 trait HasApplication
 {
-
     /**
      * @var Application
      */

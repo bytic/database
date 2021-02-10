@@ -39,7 +39,7 @@ abstract class AbstractAdapter
         if ($result !== false) {
             return $result;
         } else {
-            trigger_error($this->error()." [$sql]", E_USER_WARNING);
+            trigger_error($this->error() . " [$sql]", E_USER_WARNING);
         }
 
         return false;

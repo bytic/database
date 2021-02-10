@@ -13,6 +13,6 @@ class Truncate extends AbstractQuery
      */
     public function assemble()
     {
-        return 'TRUNCATE TABLE '.$this->getTable();
+        return 'TRUNCATE TABLE ' . $this->getTable();
     }
 }
