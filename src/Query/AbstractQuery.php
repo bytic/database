@@ -149,6 +149,11 @@ abstract class AbstractQuery
     {
         if (isset($params['where']) && is_array($params['where'])) {
             foreach ($params['where'] as $condition) {
+                if ($condition instanceof Condition) {
+                    $condition->setQuery($this);
+                    $this->where($condition);
+                    continue;
+                }
                 $condition = (array)$condition;
                 $this->where(
                     $condition[0],
