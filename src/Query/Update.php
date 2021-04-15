@@ -38,7 +38,9 @@ class Update extends AbstractQuery
                 $value = $values[0];
                 $quote = isset($values[1]) ? $values[1] : null;
 
-                if (!is_numeric($value)) {
+                if ($value === null) {
+                    $value = 'NULL';
+                } elseif (!is_numeric($value)) {
                     if (is_null($quote)) {
                         $quote = true;
                     }

@@ -11,3 +11,6 @@ ByTIC Database component
 [![Quality Score](https://img.shields.io/scrutinizer/g/bytic/database.svg?style=flat-square)](https://scrutinizer-ci.com/g/bytic/database)
 [![StyleCI](https://styleci.io/repos/119889868/shield?branch=master)](https://styleci.io/repos/119889868)
 [![Total Downloads](https://img.shields.io/packagist/dt/bytic/database.svg?style=flat-square)](https://packagist.org/packages/bytic/database)
+
+#### Inspiration
+* https://github.com/illuminate/database

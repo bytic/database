@@ -74,7 +74,13 @@ class Insert extends AbstractQuery
                 }
 
                 foreach ($value as $insertValue) {
-                    $values[$key][] = $this->getManager()->getAdapter()->quote($insertValue);
+
+                    if ($insertValue === null) {
+                        $insertValue = 'NULL';
+                    } else {
+                        $insertValue = $this->getManager()->getAdapter()->quote($insertValue);
+                    }
+                    $values[$key][] = $insertValue;
                 }
             }
         }

@@ -23,6 +23,17 @@ class InsertTest extends AbstractTest
      */
     protected $object;
 
+    public function test_null()
+    {
+        $this->object->table("table");
+        $this->object->data(["id" => 3, "name" => null]);
+
+        static::assertEquals(
+            "INSERT INTO `table` (`id`,`name`) VALUES (3, NULL)",
+            $this->object->assemble()
+        );
+    }
+
     public function testOnDuplicate()
     {
         $this->object->table("table");
