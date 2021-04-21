@@ -128,6 +128,7 @@ class MySQLi extends AbstractAdapter implements AdapterInterface
                 $return['fields'][$row['Field']] = [
                     'field' => $row['Field'],
                     'type' => $row['Type'],
+                    'nullable' => strtoupper($row['Null']) == 'YES',
                     'primary' => (
                         isset($return['indexes']['PRIMARY']['fields'][0])
                         && $return['indexes']['PRIMARY']['fields'][0] == $row['Field']
