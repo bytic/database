@@ -4,6 +4,7 @@ namespace Nip\Database\Tests\Query\Condition;
 
 use Mockery as m;
 use Nip\Database\Connections\Connection;
+use Nip\Database\Connections\ConnectionFactory;
 use Nip\Database\Query\Select as SelectQuery;
 use Nip\Database\Tests\AbstractTest;
 
@@ -22,12 +23,12 @@ class ConditionTest extends AbstractTest
     {
         parent::setUp();
 
-        $adapterMock = m::mock('Nip\Database\Adapters\MySQLi')->shouldDeferMissing();
+        $adapterMock = m::mock('Nip\Database\Adapters\MySQLi')->makePartial();
         $adapterMock->shouldReceive('cleanData')->andReturnUsing(function ($data) {
             return $data;
         });
 
-        $connection = new Connection(false);
+        $connection = (new ConnectionFactory())->make(['driver' => 'pdo_mysql']);
         $connection->setAdapter($adapterMock);
         $this->query = $connection->newQuery();
     }

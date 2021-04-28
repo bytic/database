@@ -2,12 +2,9 @@
 
 namespace Nip\Database\Connections;
 
-use InvalidArgumentException;
-use Nip\Config\Config;
-use Nip\Container\Container;
-use Nip\Database\Connectors\MySqlConnector;
-use Nip\Utility\Arr;
-use PDOException;
+use Doctrine\Common\EventManager;
+use Doctrine\DBAL\Configuration;
+use Doctrine\DBAL\Driver\AbstractMySQLDriver;
 
 /**
  * Class ConnectionFactory
@@ -15,23 +12,6 @@ use PDOException;
  */
 class ConnectionFactory
 {
-    /**
-     * The IoC container instance.
-     *
-     * @var Container
-     */
-    protected $container;
-
-    /**
-     * Create a new connection factory instance.
-     *
-     * @param  Container $container
-     */
-    public function __construct(Container $container = null)
-    {
-        $this->container = $container ? $container : Container::getInstance();
-    }
-
     /**
      * Establish a PDO connection based on the configuration.
      *
@@ -43,9 +23,6 @@ class ConnectionFactory
     {
         $config = $this->parseConfig($config, $name);
 
-//        if (isset($config['read'])) {
-//            return $this->createReadWriteConnection($config);
-//        }
         return $this->createSingleConnection($config);
     }
 
@@ -65,17 +42,33 @@ class ConnectionFactory
     /**
      * Create a single database connection instance.
      *
-     * @param  array $config
+     * @param array $config
      * @return Connection
+     * @inspiration https://github.com/doctrine/DoctrineBundle/blob/2.3.x/ConnectionFactory.php
      */
-    protected function createSingleConnection($config)
-    {
-        $pdo = $this->createPdoResolver($config);
-        if (!isset($config['driver'])) {
-            $config['driver'] = 'mysql';
+    protected function createSingleConnection(
+        $params,
+        ?Configuration $config = null,
+        ?EventManager $eventManager = null
+    ) {
+        $params = (array)$params;
+        $connection = \Doctrine\DBAL\DriverManager::getConnection($params);
+
+        $params = array_merge($connection->getParams());
+        $driver = $connection->getDriver();
+
+        if ($driver instanceof AbstractMySQLDriver) {
+            $params['charset'] = 'utf8mb4';
+
+            if (!isset($params['defaultTableOptions']['collate'])) {
+                $params['defaultTableOptions']['collate'] = 'utf8mb4_unicode_ci';
+            }
+        } else {
+            $params['charset'] = 'utf8';
         }
-        $connection = $this->createConnection($config['driver'], $pdo, $config['database'], $config['prefix'], $config);
-        $connection->connect($config['host'], $config['username'], $config['password'], $config['database']);
+        $wrapperClass = Connection::class;
+
+        $connection = new $wrapperClass($params, $driver, $config, $eventManager);
 
         return $connection;
     }
@@ -181,7 +174,7 @@ class ConnectionFactory
      * Create a connector instance based on the configuration.
      *
      * @param  array  $config
-     * @return \Illuminate\Database\Connectors\ConnectorInterface|MySqlConnector
+     * @return \Illuminate\Database\Connectors\ConnectorInterface
      *
      * @throws \InvalidArgumentException
      */
@@ -191,13 +184,19 @@ class ConnectionFactory
             throw new InvalidArgumentException('A driver must be specified.');
         }
 
-//        if ($this->container->bound($key = "db.connector.{$config['driver']}")) {
-//            return $this->container->make($key);
-//        }
+        if ($this->container->bound($key = "db.connector.{$config['driver']}")) {
+            return $this->container->make($key);
+        }
 
         switch ($config['driver']) {
             case 'mysql':
                 return new MySqlConnector();
+            case 'pgsql':
+                return new PostgresConnector();
+            case 'sqlite':
+                return new SQLiteConnector();
+            case 'sqlsrv':
+                return new SqlServerConnector();
         }
 
         throw new InvalidArgumentException("Unsupported driver [{$config['driver']}].");

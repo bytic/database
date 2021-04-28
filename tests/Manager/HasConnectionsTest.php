@@ -3,6 +3,7 @@
 namespace Nip\Database\Tests\Manager;
 
 use Nip\Database\Connections\Connection;
+use Nip\Database\Connections\ConnectionFactory;
 use Nip\Database\DatabaseManager;
 use Nip\Database\Tests\AbstractTest;
 
@@ -16,7 +17,7 @@ class HasConnectionsTest extends AbstractTest
     {
         $manager = new DatabaseManager();
 
-        $connection = new Connection(false);
+        $connection = $manager->getFactory()->make(['driver' => 'pdo_mysql']);
         $manager->setConnection($connection, 'main');
 
         $connectionFromManager = $manager->connection();
