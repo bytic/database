@@ -4,6 +4,7 @@ namespace Nip\Database\Tests\Query;
 
 use Mockery as m;
 use Nip\Database\Connections\Connection;
+use Nip\Database\Connections\ConnectionFactory;
 use Nip\Database\Query\Insert;
 use Nip\Database\Tests\AbstractTest;
 
@@ -73,11 +74,11 @@ class InsertTest extends AbstractTest
         parent::setUp();
         $this->object = new Insert();
 
-        $adapterMock = m::mock('Nip\Database\Adapters\MySQLi')->shouldDeferMissing();
+        $adapterMock = m::mock('Nip\Database\Adapters\MySQLi')->makePartial();
         $adapterMock->shouldReceive('cleanData')->andReturnUsing(function ($data) {
             return $data;
         });
-        $manager = new Connection(false);
+        $manager = (new ConnectionFactory())->make(['driver' => 'pdo_mysql']);
         $manager->setAdapter($adapterMock);
         $this->object->setManager($manager);
     }

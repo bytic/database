@@ -4,6 +4,7 @@ namespace Nip\Database\Tests;
 
 use Nip\Database\Adapters\MySQLi;
 use Nip\Database\Connections\Connection;
+use Nip\Database\Connections\ConnectionFactory;
 
 /**
  * Class ConnectionTest
@@ -65,6 +66,14 @@ class ConnectionTest extends AbstractTest
     protected function setUp(): void
     {
         parent::setUp();
-        $this->connection = new Connection(false);
+        $params = [
+            'driver' => 'pdo_mysql',
+            'host' => 'localhost',
+            'user' => 'root',
+            'password' => 'password',
+            'port' => '1234',
+        ];
+        $factory = new ConnectionFactory();
+        $this->connection = $factory->make($params);
     }
 }

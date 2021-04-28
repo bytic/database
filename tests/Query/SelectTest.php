@@ -9,6 +9,7 @@ namespace Nip\Database\Tests\Query;
 use Mockery as m;
 use Nip\Database\Adapters\MySQLi;
 use Nip\Database\Connections\Connection;
+use Nip\Database\Connections\ConnectionFactory;
 use Nip\Database\Query\Select;
 use Nip\Database\Tests\AbstractTest;
 
@@ -208,7 +209,7 @@ class SelectTest extends AbstractTest
         $adapterMock->shouldReceive('cleanData')->andReturnUsing(function ($data) {
             return $data;
         });
-        $this->connection = new Connection(false);
+        $this->connection = (new ConnectionFactory())->make(['driver' => 'pdo_mysql']);
         $this->connection->setAdapter($adapterMock);
         $this->object->setManager($this->connection);
 

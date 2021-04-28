@@ -34,4 +34,12 @@ class DatabaseManager
         $this->application = $application;
         $this->factory = $factory ? $factory : new ConnectionFactory();
     }
+
+    /**
+     * @return ConnectionFactory
+     */
+    public function getFactory(): ConnectionFactory
+    {
+        return $this->factory;
+    }
 }

@@ -17,8 +17,10 @@ use PDO;
  * Class Connection
  * @package Nip\Database\Connections
  */
-class Connection
+class Connection extends \Doctrine\DBAL\Connection
 {
+    use ConnectionLegacyMethods;
+
     use HasAdapterTrait;
 
     /**
@@ -28,104 +30,10 @@ class Connection
      */
     protected $pdo;
 
-    /**
-     * The name of the connected database.
-     *
-     * @var string
-     */
-    protected $database;
-    /**
-     * The table prefix for the connection.
-     *
-     * @var string
-     */
-    protected $tablePrefix = '';
-
-    /**
-     * The database connection configuration options.
-     *
-     * @var array
-     */
-    protected $config = [];
-
     protected $metadata;
-
-    protected $_query;
 
     protected $_queries = [];
 
-    /**
-     * Create a new database connection instance.
-     *
-     * @param  \PDO|\Closure $pdo
-     * @param  string $database
-     * @param  string $tablePrefix
-     * @param  array $config
-     */
-    public function __construct($pdo, $database = '', $tablePrefix = '', $config = [])
-    {
-        $this->pdo = $pdo;
-
-        // First we will setup the default properties. We keep track of the DB
-        // name we are connected to since it is needed when some reflective
-        // type commands are run such as checking whether a table exists.
-        $this->database = $database;
-
-        $this->tablePrefix = $tablePrefix;
-        $this->config = $config;
-
-        // We need to initialize a query grammar and the query post processors
-        // which are both very important parts of the database abstractions
-        // so we initialize these to their default values while starting.
-//        $this->useDefaultQueryGrammar();
-//        $this->useDefaultPostProcessor();
-    }
-
-    /**
-     * Connects to SQL server
-     *
-     * @param string $host
-     * @param string $user
-     * @param string $password
-     * @param string $database
-     * @param bool $newLink
-     *
-     * @return static
-     */
-    public function connect($host, $user, $password, $database, $newLink = false)
-    {
-        if (!$this->pdo) {
-            try {
-                $this->pdo = $this->getAdapter()->connect($host, $user, $password, $database, $newLink);
-
-                if (isset($this->config['charset'])) {
-                    $this->getAdapter()->query('SET CHARACTER SET ' . $this->config['charset']);
-                    $this->getAdapter()->query('SET NAMES ' . $this->config['charset']);
-                }
-                $this->setDatabase($database);
-            } catch (Exception $e) {
-                $e->log();
-            }
-        }
-
-        return $this;
-    }
-
-    /**
-     * @return string
-     */
-    public function getDatabase()
-    {
-        return $this->database;
-    }
-
-    /**
-     * @param string $database
-     */
-    public function setDatabase($database)
-    {
-        $this->database = $database;
-    }
 
     /**
      * @return MetadataManager
@@ -219,35 +127,12 @@ class Connection
     }
 
     /**
-     * Gets the ID of the last inserted record
-     * @return int
-     */
-    public function lastInsertID()
-    {
-        return $this->getAdapter()->lastInsertID();
-    }
-
-    /**
      * Gets the number of rows affected by the last operation
      * @return int
      */
     public function affectedRows()
     {
         return $this->getAdapter()->affectedRows();
-    }
-
-    /**
-     * Disconnects from server
-     */
-    public function disconnect()
-    {
-        if ($this->pdo) {
-            try {
-                $this->getAdapter()->disconnect();
-            } catch (Exception $e) {
-                $e->log();
-            }
-        }
     }
 
     /**
