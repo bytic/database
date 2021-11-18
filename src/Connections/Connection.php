@@ -3,7 +3,6 @@
 namespace Nip\Database\Connections;
 
 use Nip\Database\Adapters\HasAdapterTrait;
-use Nip\Database\Exception;
 use Nip\Database\Metadata\Manager as MetadataManager;
 use Nip\Database\Query\AbstractQuery as AbstractQuery;
 use Nip\Database\Query\Delete as DeleteQuery;
@@ -11,7 +10,6 @@ use Nip\Database\Query\Insert as InsertQuery;
 use Nip\Database\Query\Select as SelectQuery;
 use Nip\Database\Query\Update as UpdateQuery;
 use Nip\Database\Result;
-use PDO;
 
 /**
  * Class Connection
@@ -23,16 +21,7 @@ class Connection extends \Doctrine\DBAL\Connection
 
     use HasAdapterTrait;
 
-    /**
-     * The active PDO connection.
-     *
-     * @var PDO
-     */
-    protected $pdo;
-
     protected $metadata;
-
-    protected $_queries = [];
 
 
     /**
@@ -144,22 +133,6 @@ class Connection extends \Doctrine\DBAL\Connection
         return $this->getAdapter()->describeTable($this->protect($table));
     }
 
-    /**
-     * Adds backticks to input
-     *
-     * @param string $input
-     * @return string
-     */
-    public function protect($input)
-    {
-        return str_replace("`*`", "*", '`' . str_replace('.', '`.`', $input) . '`');
-    }
 
-    /**
-     * @return array
-     */
-    public function getQueries()
-    {
-        return $this->_queries;
-    }
+
 }

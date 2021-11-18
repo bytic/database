@@ -27,7 +27,7 @@
     }
   },
   "require": {
-    "php": "^7.2|^8.0",
+    "php": "^7.4|^8.0",
     "doctrine/dbal": "^3.0",
     "bytic/inflector": "^1.0",
     "bytic/cache": "^1.0",

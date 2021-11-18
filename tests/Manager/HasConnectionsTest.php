@@ -2,8 +2,6 @@
 
 namespace Nip\Database\Tests\Manager;
 
-use Nip\Database\Connections\Connection;
-use Nip\Database\Connections\ConnectionFactory;
 use Nip\Database\DatabaseManager;
 use Nip\Database\Tests\AbstractTest;
 
