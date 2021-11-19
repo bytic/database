@@ -48,53 +48,7 @@ class Connection extends \Doctrine\DBAL\Connection
         return $table;
     }
 
-    /**
-     * @param string $type optional
-     *
-     * @return AbstractQuery|SelectQuery
-     */
-    public function newSelect()
-    {
-        return $this->newQuery('select');
-    }
 
-    /**
-     * @param string $type optional
-     * @return AbstractQuery|SelectQuery|UpdateQuery|InsertQuery|DeleteQuery
-     */
-    public function newQuery($type = "select")
-    {
-        $className = '\Nip\Database\Query\\' . inflector()->camelize($type);
-        $query = new $className();
-        /** @var AbstractQuery $query */
-        $query->setManager($this);
-
-        return $query;
-    }
-
-    /**
-     * @return InsertQuery
-     */
-    public function newInsert()
-    {
-        return $this->newQuery('insert');
-    }
-
-    /**
-     * @return UpdateQuery
-     */
-    public function newUpdate()
-    {
-        return $this->newQuery('update');
-    }
-
-    /**
-     * @return DeleteQuery
-     */
-    public function newDelete()
-    {
-        return $this->newQuery('delete');
-    }
 
     /**
      * Executes SQL query

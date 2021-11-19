@@ -2,6 +2,8 @@
 
 namespace Nip\Database\Query;
 
+use Nip\Database\Connections\Connection;
+
 /**
  * Class Insert
  * @package Nip\Database\Query
@@ -13,16 +15,12 @@ class Insert extends AbstractQuery
     protected $_values;
 
     /**
-     * @return string
+     * @param Connection $connection
      */
-    public function assemble()
+    public function __construct(Connection $connection)
     {
-        $return = "INSERT INTO " . $this->protect($this->getTable());
-        $return .= $this->parseCols();
-        $return .= $this->parseValues();
-        $return .= $this->parseOnDuplicate();
-
-        return $return;
+        parent::__construct($connection);
+        $this->builder->insert();
     }
 
     /**
@@ -33,6 +31,7 @@ class Insert extends AbstractQuery
         if (isset($this->parts['data'][0]) && is_array($this->parts['data'][0])) {
             $this->setCols(array_keys($this->parts['data'][0]));
         }
+
         return $this->_cols ? ' (' . implode(',', array_map([$this, 'protect'], $this->_cols)) . ')' : '';
     }
 
@@ -43,6 +42,7 @@ class Insert extends AbstractQuery
     public function setCols($cols = null)
     {
         $this->_cols = $cols;
+
         return $this;
     }
 
@@ -56,6 +56,7 @@ class Insert extends AbstractQuery
         } elseif (is_array($this->parts['data'])) {
             return $this->parseData();
         }
+
         return false;
     }
 
@@ -110,6 +111,7 @@ class Insert extends AbstractQuery
 
             return " ON DUPLICATE KEY UPDATE {$update->parseUpdate()}";
         }
+
         return '';
     }
 

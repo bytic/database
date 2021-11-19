@@ -2,6 +2,7 @@
 
 namespace Nip\Database\Query;
 
+use Doctrine\DBAL\Query\QueryBuilder;
 use Nip\Database\Connections\Connection;
 use Nip\Database\Query\Condition\Condition;
 use Nip\Database\Result;
@@ -24,10 +25,27 @@ use Nip\Database\Result;
  */
 abstract class AbstractQuery
 {
+
     /**
-     * @var Connection
+     * @var QueryBuilder
      */
-    protected $db;
+    protected $builder;
+
+    /*
+     * The default values of SQL parts collection
+     */
+    private const SQL_PARTS_DEFAULTS = [
+        'select' => [],
+        'distinct' => false,
+        'from' => [],
+        'join' => [],
+        'set' => [],
+        'where' => null,
+        'groupBy' => [],
+        'having' => null,
+        'orderBy' => [],
+        'values' => [],
+    ];
 
     protected $parts = [
         'where' => null,
@@ -36,14 +54,20 @@ abstract class AbstractQuery
     protected $string = null;
 
     /**
+     * @param Connection $connection
+     */
+    public function __construct(Connection $connection)
+    {
+        $this->builder = new QueryBuilder($connection);
+    }
+
+    /**
      * @param Connection $manager
      * @return $this
      */
     public function setManager(Connection $manager)
     {
-        $this->db = $manager;
-
-        return $this;
+        throw new \Exception('Not implemented');
     }
 
     /**
@@ -59,21 +83,34 @@ abstract class AbstractQuery
             $this->initPart($name);
         }
 
-        foreach ($arguments as $argument) {
-            $this->addPart($name, $argument);
+        if (in_array($name, ['where'])) {
+            foreach ($arguments as $argument) {
+                $this->addPart($name, $argument);
+            }
         }
+
+        return call_user_func_array([$this->builder, $name], $arguments);
+    }
+
+    public function table($table, $alias = null): AbstractQuery
+    {
+        $this->builder->add('from', ['table' => $table, 'alias' => $alias]);
 
         return $this;
     }
 
-    /**
-     * @param $name
-     * @return $this
-     */
-    protected function initPart($name)
+    public function options($value): AbstractQuery
     {
-        $this->isGenerated(false);
-        $this->parts[$name] = [];
+        $value = strtolower($value);
+        if ($value == 'distinct') {
+            $this->builder->distinct();
+        }
+        return $this;
+    }
+
+    public function data(array $data): AbstractQuery
+    {
+        $this->builder->values($data);
 
         return $this;
     }
@@ -84,11 +121,7 @@ abstract class AbstractQuery
      */
     public function isGenerated($generated = null)
     {
-        if ($generated === false) {
-            $this->string = null;
-        }
-
-        return $this->string !== null;
+        return $this->builder->getState();
     }
 
     /**
@@ -98,12 +131,7 @@ abstract class AbstractQuery
      */
     protected function addPart($name, $value)
     {
-        if (!isset($this->parts[$name])) {
-            $this->initPart($name);
-        }
-
-        $this->isGenerated(false);
-        $this->parts[$name][] = $value;
+        $this->builder->add($name, $value);
 
         return $this;
     }
@@ -168,8 +196,10 @@ abstract class AbstractQuery
      * @param array $values
      * @return $this
      */
-    public function where($string, $values = [])
+    public function where()
     {
+        $this->builder->andWhere(func_get_args());
+        return $this;
         /** @var Condition $this ->_parts[] */
         if ($string) {
             if (isset($this->parts['where']) && $this->parts['where'] instanceof Condition) {
@@ -179,6 +209,18 @@ abstract class AbstractQuery
             }
         }
 
+        return $this;
+    }
+
+    public function andWhere()
+    {
+        $this->builder->andWhere(func_get_args());
+        return $this;
+    }
+
+    public function orWhere()
+    {
+        $this->builder->orWhere(func_get_args());
         return $this;
     }
 
@@ -261,25 +303,6 @@ abstract class AbstractQuery
      *
      * @return $this
      */
-    public function orWhere($string, $values = [])
-    {
-        if ($string) {
-            if ($this->parts['where'] instanceof Condition) {
-                $this->parts['where'] = $this->parts['where']->or_($this->getCondition($string, $values));
-            } else {
-                $this->parts['where'] = $this->getCondition($string, $values);
-            }
-        }
-
-        return $this;
-    }
-
-    /**
-     * @param $string
-     * @param array $values
-     *
-     * @return $this
-     */
     public function having($string, $values = [])
     {
         if (empty($string)) {
@@ -295,6 +318,7 @@ abstract class AbstractQuery
             $having = $condition;
         }
         $this->parts['having'] = $having;
+
         return $this;
     }
 
@@ -310,11 +334,11 @@ abstract class AbstractQuery
     }
 
     /**
-     * @return Connection
+     * @return \Doctrine\DBAL\Connection|Connection
      */
     public function getManager()
     {
-        return $this->db;
+        return $this->builder->getConnection();
     }
 
     /**
@@ -340,17 +364,13 @@ abstract class AbstractQuery
      */
     public function getString()
     {
-        if ($this->string === null) {
-            $this->string = (string)$this->assemble();
-        }
-
-        return $this->string;
+        return $this->builder->getSQL();
     }
 
-    /**
-     * @return null
-     */
-    abstract public function assemble();
+    public function assemble()
+    {
+        return $this->builder->getSQL();
+    }
 
     /**
      * @return array
@@ -401,7 +421,7 @@ abstract class AbstractQuery
      */
     public function getPart($name)
     {
-        return $this->hasPart($name) ? $this->parts[$name] : null;
+        return $this->builder->getQueryPart($name);
     }
 
     /**
@@ -410,20 +430,7 @@ abstract class AbstractQuery
      */
     public function hasPart($name)
     {
-        if (!isset($this->parts[$name])) {
-            return false;
-        }
-        if ($this->parts[$name] === null) {
-            return false;
-        }
-        if (is_array($this->parts[$name]) && count($this->parts[$name]) < 1) {
-            return false;
-        }
-        if (is_string($this->parts[$name]) && empty($this->parts[$name])) {
-            return false;
-        }
-
-        return true;
+        return $this->builder->getQueryPart($name) != static::SQL_PARTS_DEFAULTS[$name];
     }
 
     /**
@@ -446,11 +453,12 @@ abstract class AbstractQuery
      */
     protected function getTable()
     {
-        if (!is_array($this->parts['table']) && count($this->parts['table']) < 1) {
+        $from = $this->getPart('from');
+        if (!is_array($from) || count($from) < 1) {
             trigger_error('No Table defined', E_USER_WARNING);
         }
 
-        return reset($this->parts['table']);
+        return reset($from)['table'];
     }
 
     /**
@@ -534,5 +542,20 @@ abstract class AbstractQuery
     protected function cleanProtected($input)
     {
         return str_replace('`', '', $input);
+    }
+
+    /**
+     * @param string $method
+     */
+    protected function triggerDeprecation($method, $alternative = null)
+    {
+        @trigger_error(
+            sprintf(
+                "Method %s is no longer available for %s. Moving to Doctrine Connection. %s",
+                $method, __CLASS__,
+                ($alternative ? 'Use alternative ->'.$alternative.' instead.' : 'No alternatives provided.')
+            ),
+            E_USER_DEPRECATED
+        );
     }
 }

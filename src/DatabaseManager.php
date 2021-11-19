@@ -32,7 +32,7 @@ class DatabaseManager
     public function __construct(ApplicationInterface $application = null, ConnectionFactory $factory = null)
     {
         $this->application = $application;
-        $this->factory = $factory ? $factory : new ConnectionFactory();
+        $this->factory = $factory ?: new ConnectionFactory();
     }
 
     /**

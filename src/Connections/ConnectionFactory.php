@@ -4,11 +4,11 @@ namespace Nip\Database\Connections;
 
 use Doctrine\Common\EventManager;
 use Doctrine\DBAL\Configuration;
-use Doctrine\DBAL\Driver\AbstractMySQLDriver;
 
 /**
  * Class ConnectionFactory
  * @package Nip\Database\Connectors
+ * @inspiration https://github.com/doctrine/DoctrineBundle/blob/1.3.x/ConnectionFactory.php
  */
 class ConnectionFactory
 {
@@ -21,21 +21,28 @@ class ConnectionFactory
      */
     public function make($config, $name = null)
     {
-        $config = $this->parseConfig($config, $name);
+        $params = $this->parseConfig($config, $name);
 
-        return $this->createSingleConnection($config);
+        return $this->createSingleConnection($params);
     }
 
     /**
      * Parse and prepare the database configuration.
      *
-     * @param  array $config
+     * @param  array $params
      * @param  string $name
      * @return array
      */
-    protected function parseConfig($config, $name)
+    protected function parseConfig($params, $name)
     {
-        return $config;
+        $params['wrapperClass'] = Connection::class;
+        $params['charset'] = 'utf8mb4';
+
+        if (!isset($params['defaultTableOptions']['collate'])) {
+            $params['defaultTableOptions']['collate'] = 'utf8mb4_unicode_ci';
+        }
+
+        return $params;
 //        return Arr::add(Arr::add($config, 'prefix', ''), 'name', $name);
     }
 
@@ -44,7 +51,6 @@ class ConnectionFactory
      *
      * @param array $config
      * @return Connection
-     * @inspiration https://github.com/doctrine/DoctrineBundle/blob/2.3.x/ConnectionFactory.php
      */
     protected function createSingleConnection(
         $params,
@@ -52,24 +58,7 @@ class ConnectionFactory
         ?EventManager $eventManager = null
     ) {
         $params = (array)$params;
-        $connection = \Doctrine\DBAL\DriverManager::getConnection($params);
 
-        $params = array_merge($connection->getParams());
-        $driver = $connection->getDriver();
-
-        if ($driver instanceof AbstractMySQLDriver) {
-            $params['charset'] = 'utf8mb4';
-
-            if (!isset($params['defaultTableOptions']['collate'])) {
-                $params['defaultTableOptions']['collate'] = 'utf8mb4_unicode_ci';
-            }
-        } else {
-            $params['charset'] = 'utf8';
-        }
-        $wrapperClass = Connection::class;
-
-        $connection = new $wrapperClass($params, $driver, $config, $eventManager);
-
-        return $connection;
+        return \Doctrine\DBAL\DriverManager::getConnection($params);
     }
 }
