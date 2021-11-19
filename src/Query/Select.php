@@ -2,6 +2,7 @@
 
 namespace Nip\Database\Query;
 
+use Nip\Database\Connections\Connection;
 use Nip\Database\Query\Select\Union;
 
 /**
@@ -14,6 +15,15 @@ use Nip\Database\Query\Select\Union;
  */
 class Select extends AbstractQuery
 {
+    /**
+     * @param Connection $connection
+     */
+    public function __construct(Connection $connection)
+    {
+        parent::__construct($connection);
+        $this->builder->select('*');
+    }
+
     /**
      * @param $name
      * @param $arguments
@@ -32,12 +42,25 @@ class Select extends AbstractQuery
                 $input = [$input, $alias, $protected];
             }
 
-            $input[0] = strtoupper($name) . '(' . $this->protect($input[0]) . ')';
+            $input[0] = strtoupper($name).'('.$this->protect($input[0]).')';
 
             return $this->cols($input);
         }
 
         return parent::__call($name, $arguments);
+    }
+
+    public function cols(...$arguments): Select
+    {
+        $select = $this->builder->getQueryPart('select');
+        if ($select == ['*']) {
+            $this->builder->resetQueryPart('select');
+        }
+        foreach ($arguments as $col) {
+            $this->builder->addSelect($col);
+        }
+
+        return $this;
     }
 
     /**
@@ -66,10 +89,10 @@ class Select extends AbstractQuery
                 $match[] = $protected ? $this->protect($field) : $field;
             }
         }
-        $match = 'MATCH(' . implode(
-            ',',
-            $match
-        ) . ") AGAINST ('" . $against . "'" . ($boolean_mode ? ' IN BOOLEAN MODE' : '') . ')';
+        $match = 'MATCH('.implode(
+                ',',
+                $match
+            ).") AGAINST ('".$against."'".($boolean_mode ? ' IN BOOLEAN MODE' : '').')';
 
         return $this->cols([$match, $alias, false])->where([$match]);
     }
@@ -112,53 +135,6 @@ class Select extends AbstractQuery
         $this->parts['group']['rollup'] = $rollup;
 
         return $this;
-    }
-
-    /**
-     * @return string
-     */
-    public function assemble()
-    {
-        $select = $this->parseCols();
-        $options = $this->parseOptions();
-        $from = $this->parseFrom();
-
-        $group = $this->parseGroup();
-        $having = $this->parseHaving();
-
-        $order = $this->parseOrder();
-
-        $query = "SELECT";
-
-        if (!empty($options)) {
-            $query .= " $options";
-        }
-
-        if (!empty($select)) {
-            $query .= " $select";
-        }
-
-        if (!empty($from)) {
-            $query .= " FROM $from";
-        }
-
-        $query .= $this->assembleWhere();
-
-        if (!empty($group)) {
-            $query .= " GROUP BY $group";
-        }
-
-        if (!empty($having)) {
-            $query .= " HAVING $having";
-        }
-
-        if (!empty($order)) {
-            $query .= " ORDER BY $order";
-        }
-
-        $query .= $this->assembleLimit();
-
-        return $query;
     }
 
     /**

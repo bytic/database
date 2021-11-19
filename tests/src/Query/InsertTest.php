@@ -7,6 +7,7 @@ use Nip\Database\Connections\Connection;
 use Nip\Database\Connections\ConnectionFactory;
 use Nip\Database\Query\Insert;
 use Nip\Database\Tests\AbstractTest;
+use Nip\Database\Tests\TestUtil;
 
 /**
  * Class InsertTest
@@ -72,14 +73,8 @@ class InsertTest extends AbstractTest
     protected function setUp(): void
     {
         parent::setUp();
-        $this->object = new Insert();
 
-        $adapterMock = m::mock('Nip\Database\Adapters\MySQLi')->makePartial();
-        $adapterMock->shouldReceive('cleanData')->andReturnUsing(function ($data) {
-            return $data;
-        });
-        $manager = (new ConnectionFactory())->make(['driver' => 'pdo_mysql']);
-        $manager->setAdapter($adapterMock);
-        $this->object->setManager($manager);
+        $manager = TestUtil::getConnection();
+        $this->object = new Insert($manager);
     }
 }

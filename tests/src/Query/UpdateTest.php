@@ -16,7 +16,7 @@ use Nip\Database\Tests\AbstractTest;
 class UpdateTest extends AbstractTest
 {
     /**
-     * @var Insert
+     * @var Update
      */
     protected $object;
 
@@ -34,7 +34,6 @@ class UpdateTest extends AbstractTest
     protected function setUp(): void
     {
         parent::setUp();
-        $this->object = new Update();
 
         $adapterMock = m::mock('Nip\Database\Adapters\MySQLi')->makePartial();
         $adapterMock->shouldReceive('cleanData')->andReturnUsing(function ($data) {
@@ -42,6 +41,6 @@ class UpdateTest extends AbstractTest
         });
         $manager = (new ConnectionFactory())->make(['driver' => 'pdo_mysql']);
         $manager->setAdapter($adapterMock);
-        $this->object->setManager($manager);
+        $this->object = new Update($manager);
     }
 }

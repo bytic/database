@@ -2,6 +2,8 @@
 
 namespace Nip\Database\Query;
 
+use Nip\Database\Connections\Connection;
+
 /**
  * Class Update
  * @package Nip\Database\Query
@@ -9,16 +11,22 @@ namespace Nip\Database\Query;
 class Update extends AbstractQuery
 {
     /**
-     * @return string
+     * @param Connection $connection
      */
-    public function assemble()
+    public function __construct(Connection $connection)
     {
-        $query = 'UPDATE ' . $this->protect($this->getTable()) . ' SET ' . $this->parseUpdate();
+        parent::__construct($connection);
+        $this->builder->update();
+    }
 
-        $query .= $this->assembleWhere();
-        $query .= $this->assembleLimit();
+    public function data(array $data): AbstractQuery
+    {
+        foreach ($data as $key => $value) {
+            $this->builder->set($key, $this->builder->getConnection()->quote($value));
+//            $this->builder->setParameter('data_'.$key, $value);
+        }
 
-        return $query;
+        return $this;
     }
 
     /**

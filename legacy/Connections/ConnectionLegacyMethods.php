@@ -5,6 +5,11 @@ namespace Nip\Database\Connections;
 use Doctrine\DBAL\Cache\QueryCacheProfile;
 use Doctrine\DBAL\Logging\DebugStack;
 use Doctrine\DBAL\Result;
+use Nip\Database\Query\AbstractQuery as AbstractQuery;
+use Nip\Database\Query\Delete as DeleteQuery;
+use Nip\Database\Query\Insert as InsertQuery;
+use Nip\Database\Query\Select as SelectQuery;
+use Nip\Database\Query\Update as UpdateQuery;
 
 /**
  * Trait ConnectionLegacyMethods
@@ -13,6 +18,52 @@ use Doctrine\DBAL\Result;
 trait ConnectionLegacyMethods
 {
     protected $_queries = [];
+
+    /**
+     * @param string $type optional
+     *
+     * @return AbstractQuery|SelectQuery
+     */
+    public function newSelect()
+    {
+        return $this->newQuery('select');
+    }
+
+    /**
+     * @return InsertQuery
+     */
+    public function newInsert()
+    {
+        return $this->newQuery('insert');
+    }
+
+    /**
+     * @return UpdateQuery
+     */
+    public function newUpdate()
+    {
+        return $this->newQuery('update');
+    }
+
+    /**
+     * @return DeleteQuery
+     */
+    public function newDelete()
+    {
+        return $this->newQuery('delete');
+    }
+
+    /**
+     * @param string $type optional
+     * @return AbstractQuery|SelectQuery|UpdateQuery|InsertQuery|DeleteQuery
+     */
+    public function newQuery($type = "select")
+    {
+        $className = '\Nip\Database\Query\\'.inflector()->camelize($type);
+        $query = new $className($this);
+
+        return $query;
+    }
 
     /**
      * @inheritDoc
