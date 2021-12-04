@@ -5,6 +5,7 @@ namespace Nip\Database\Connections;
 use InvalidArgumentException;
 use Nip\Config\Config;
 use Nip\Container\Container;
+use Nip\Database\Connectors\MySqlConnector;
 use Nip\Utility\Arr;
 use PDOException;
 
@@ -180,7 +181,7 @@ class ConnectionFactory
      * Create a connector instance based on the configuration.
      *
      * @param  array  $config
-     * @return \Illuminate\Database\Connectors\ConnectorInterface
+     * @return \Illuminate\Database\Connectors\ConnectorInterface|MySqlConnector
      *
      * @throws \InvalidArgumentException
      */
@@ -190,19 +191,13 @@ class ConnectionFactory
             throw new InvalidArgumentException('A driver must be specified.');
         }
 
-        if ($this->container->bound($key = "db.connector.{$config['driver']}")) {
-            return $this->container->make($key);
-        }
+//        if ($this->container->bound($key = "db.connector.{$config['driver']}")) {
+//            return $this->container->make($key);
+//        }
 
         switch ($config['driver']) {
             case 'mysql':
                 return new MySqlConnector();
-            case 'pgsql':
-                return new PostgresConnector();
-            case 'sqlite':
-                return new SQLiteConnector();
-            case 'sqlsrv':
-                return new SqlServerConnector();
         }
 
         throw new InvalidArgumentException("Unsupported driver [{$config['driver']}].");

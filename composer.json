@@ -38,7 +38,9 @@
   "require-dev": {
     "bytic/application": "^1.0",
     "bytic/container": "^0.9|^1.0|^2.0",
-    "phpunit/phpunit": "^7.2|^8.2|^9.0",
+    "bytic/config": "^0.9|^1.0|^2.0",
+    "bytic/phpqatools": "^1.0",
+    "bytic/phpqaconfig": "^1.0",
     "mockery/mockery": "^1.0"
   }
 }

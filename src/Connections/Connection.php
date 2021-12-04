@@ -102,6 +102,9 @@ class Connection
                     $this->getAdapter()->query('SET CHARACTER SET ' . $this->config['charset']);
                     $this->getAdapter()->query('SET NAMES ' . $this->config['charset']);
                 }
+                if (isset($this->config['modes'])) {
+                    $this->getAdapter()->query("set session sql_mode='{$this->config['modes']}'");
+                }
                 $this->setDatabase($database);
             } catch (Exception $e) {
                 $e->log();
