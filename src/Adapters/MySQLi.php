@@ -123,6 +123,9 @@ class MySQLi extends AbstractAdapter implements AdapterInterface
         $return = ['fields' => [], 'indexes' => []];
 
         $result = $this->execute('DESCRIBE ' . $table);
+        if (is_bool($result)) {
+            return false;
+        }
         if (mysqli_num_rows($result)) {
             while ($row = $this->fetchAssoc($result)) {
                 $return['fields'][$row['Field']] = [
@@ -140,6 +143,9 @@ class MySQLi extends AbstractAdapter implements AdapterInterface
         }
 
         $result = $this->execute('SHOW INDEX IN ' . $table);
+        if (is_bool($result)) {
+            return false;
+        }
         if (mysqli_num_rows($result)) {
             while ($row = $this->fetchAssoc($result)) {
                 if (!isset($return['indexes'][$row['Key_name']])) {
