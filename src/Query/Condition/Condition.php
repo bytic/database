@@ -77,7 +77,7 @@ class Condition
                     }
                 }
                 $value = '(' . implode(', ', $value) . ')';
-            } elseif (is_numeric($value)) {
+            } elseif (is_int($value) || is_float($value)) {
             } else {
                 $value = $this->getQuery()->getManager()->getAdapter()->quote($values[$i]);
             }

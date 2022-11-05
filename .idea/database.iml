@@ -31,7 +31,6 @@
       <excludeFolder url="file://$MODULE_DIR$/vendor/phpdocumentor/reflection-common" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/phpdocumentor/reflection-docblock" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/phpdocumentor/type-resolver" />
-      <excludeFolder url="file://$MODULE_DIR$/vendor/phpspec/prophecy" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/phpunit/php-code-coverage" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/phpunit/php-file-iterator" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/phpunit/php-text-template" />
@@ -95,6 +94,7 @@
       <excludeFolder url="file://$MODULE_DIR$/vendor/bytic/config" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/hamcrest/hamcrest-php" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/mockery/mockery" />
+      <excludeFolder url="file://$MODULE_DIR$/vendor/ocramius/package-versions" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
