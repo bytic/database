@@ -29,7 +29,7 @@ class MySQLi extends AbstractAdapter implements AdapterInterface
             if ($this->selectDatabase($database)) {
                 return $this->connection;
             } else {
-                $message = 'Cannot select database ' . $database;
+                $message = 'Cannot select database '.$database;
             }
         } else {
             $message = mysqli_error($this->connection);
@@ -55,7 +55,11 @@ class MySQLi extends AbstractAdapter implements AdapterInterface
      */
     public function query($sql)
     {
-        return mysqli_query($this->connection, $sql);
+        try {
+            return mysqli_query($this->connection, $sql);
+        } catch (\Exception $e) {
+            throw new \Exception($e->getMessage().' for query '.$sql, $e->getCode(), $e);
+        }
     }
 
     /**
@@ -122,7 +126,7 @@ class MySQLi extends AbstractAdapter implements AdapterInterface
 
         $return = ['fields' => [], 'indexes' => []];
 
-        $result = $this->execute('DESCRIBE ' . $table);
+        $result = $this->execute('DESCRIBE '.$table);
         if (is_bool($result)) {
             return false;
         }
@@ -137,12 +141,12 @@ class MySQLi extends AbstractAdapter implements AdapterInterface
                         && $return['indexes']['PRIMARY']['fields'][0] == $row['Field']
                     ),
                     'default' => $row['Default'],
-                    'auto_increment' => ($row['Extra'] === 'auto_increment')
+                    'auto_increment' => ($row['Extra'] === 'auto_increment'),
                 ];
             }
         }
 
-        $result = $this->execute('SHOW INDEX IN ' . $table);
+        $result = $this->execute('SHOW INDEX IN '.$table);
         if (is_bool($result)) {
             return false;
         }
@@ -181,7 +185,7 @@ class MySQLi extends AbstractAdapter implements AdapterInterface
         if ($this->numRows($result)) {
             while ($row = $this->fetchArray($result)) {
                 $return[$row[0]] = [
-                    "type" => $row[1] == "BASE TABLE" ? "table" : "view"
+                    "type" => $row[1] == "BASE TABLE" ? "table" : "view",
                 ];
             }
         }
@@ -214,6 +218,7 @@ class MySQLi extends AbstractAdapter implements AdapterInterface
     public function quote($value)
     {
         $value = $this->cleanData($value);
+
         return is_numeric($value) ? $value : "'$value'";
     }
 
