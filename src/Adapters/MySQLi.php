@@ -219,7 +219,17 @@ class MySQLi extends AbstractAdapter implements AdapterInterface
     {
         $value = $this->cleanData($value);
 
-        return is_numeric($value) ? $value : "'$value'";
+        if (is_int($value)) {
+            return $value;
+        }
+        if (is_float($value)) {
+            return $value;
+        }
+        $float = floatval($value);
+        if (is_float($float) && (string) $float == $value) {
+            return $float;
+        }
+        return "'$value'";
     }
 
     /**
