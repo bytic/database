@@ -280,4 +280,12 @@ class Connection
     {
         return $this->_queries;
     }
+
+    /**
+     * @return \Closure|PDO
+     */
+    public function getPdo()
+    {
+        return $this->pdo;
+    }
 }
