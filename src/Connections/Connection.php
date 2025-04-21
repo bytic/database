@@ -4,7 +4,7 @@ namespace Nip\Database\Connections;
 
 use Nip\Database\Adapters\HasAdapterTrait;
 use Nip\Database\Exception;
-use Nip\Database\Metadata\Manager as MetadataManager;
+use Nip\Database\Metadata\HasMetadata;
 use Nip\Database\Query\AbstractQuery as AbstractQuery;
 use Nip\Database\Query\Delete as DeleteQuery;
 use Nip\Database\Query\Insert as InsertQuery;
@@ -20,6 +20,7 @@ use PDO;
 class Connection
 {
     use HasAdapterTrait;
+    use HasMetadata;
 
     /**
      * The active PDO connection.
@@ -48,7 +49,6 @@ class Connection
      */
     protected $config = [];
 
-    protected $metadata;
 
     protected $_query;
 
@@ -130,18 +130,6 @@ class Connection
         $this->database = $database;
     }
 
-    /**
-     * @return MetadataManager
-     */
-    public function getMetadata()
-    {
-        if (!$this->metadata) {
-            $this->metadata = new MetadataManager();
-            $this->metadata->setConnection($this);
-        }
-
-        return $this->metadata;
-    }
 
     /**
      * Prefixes table names
@@ -279,5 +267,13 @@ class Connection
     public function getQueries()
     {
         return $this->_queries;
+    }
+
+    /**
+     * @return \Closure|PDO
+     */
+    public function getPdo()
+    {
+        return $this->pdo;
     }
 }
