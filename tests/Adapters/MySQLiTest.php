@@ -6,6 +6,9 @@ namespace Nip\Database\Tests\Adapters;
 use Nip\Database\Adapters\MySQLi;
 use PHPUnit\Framework\TestCase;
 
+/**
+ *
+ */
 class MySQLiTest extends TestCase
 {
     /**
@@ -19,7 +22,7 @@ class MySQLiTest extends TestCase
         $adapter = \Mockery::mock(MySQLi::class)->makePartial();
         $adapter->shouldReceive('cleanData')->andReturnArg(0);
 
-        self::assertSame($expected, $adapter->quote($value));
+        self::assertSame($expected, $adapter->quote($input));
     }
 
     public function data_quote()
@@ -30,10 +33,10 @@ class MySQLiTest extends TestCase
             ['242e8116', '\'242e8116\''],
             ['24a','\'24a\''],
             ['a24','\'a24\''],
-            [0, '0'],
-            ['0', '0'],
-            [0.5, '0.5'],
-            ['0.5','0.5'],
+            [0, 0],
+            ['0', 0],
+            [0.5, 0.5],
+            ['0.5',0.5],
             [1, 1],
             ['1', 1],
             [1.1, 1.1],
