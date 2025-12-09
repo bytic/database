@@ -238,6 +238,9 @@ class MySQLi extends AbstractAdapter implements AdapterInterface
      */
     public function cleanData($data)
     {
+        if (empty($data)) {
+            return $data;
+        }
         return mysqli_real_escape_string($this->connection, $data);
     }
 
