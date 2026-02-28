@@ -374,10 +374,10 @@ abstract class AbstractQuery
         return '';
     }
 
-    protected function parseOrder(): string|false
+    protected function parseOrder(): string
     {
         if (!isset($this->parts['order']) || !is_array($this->parts['order']) || count($this->parts['order']) < 1) {
-            return false;
+            return '';
         }
 
         $orderParts = [];

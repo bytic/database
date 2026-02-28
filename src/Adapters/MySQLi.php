@@ -92,8 +92,8 @@ class MySQLi extends AbstractAdapter implements AdapterInterface
             return null;
         }
         mysqli_data_seek($result, $row);
-        $row = mysqli_fetch_assoc($result);
-        return $row[$field] ?? null;
+        $rowData = mysqli_fetch_assoc($result);
+        return $rowData[$field] ?? null;
     }
 
     public function freeResults(mixed $result): void

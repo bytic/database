@@ -98,8 +98,9 @@ class ConnectionFactory
     }
 
     /**
-     * Return a PDO resolver closure (currently a no-op; kept for future migration).
+     * Return a PDO resolver (currently a no-op; kept for future PDO migration).
      *
+     * @deprecated Will be implemented properly when PDO support is added.
      * @param  array<string, mixed>|Config $config
      */
     protected function createPdoResolver(array|Config $config): mixed

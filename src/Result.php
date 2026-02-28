@@ -108,11 +108,9 @@ class Result
         return $this->query;
     }
 
-    public function setQuery(AbstractQuery|string $query): void
+    public function setQuery(AbstractQuery $query): void
     {
-        if ($query instanceof AbstractQuery) {
-            $this->query = $query;
-        }
+        $this->query = $query;
     }
 
     public function numRows(): int|false

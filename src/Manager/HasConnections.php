@@ -67,6 +67,12 @@ trait HasConnections
         return $name ?? $this->getDefaultConnection();
     }
 
+    /**
+     * Apply post-creation configuration to the connection.
+     *
+     * The $type parameter (e.g. 'read'/'write' split) is reserved for a
+     * future read/write splitting feature and is unused at this time.
+     */
     protected function configure(Connection $connection, ?string $type): Connection
     {
         return $connection;

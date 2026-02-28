@@ -70,12 +70,21 @@ class Connection implements ConnectionInterface
                 $this->pdo = $this->getAdapter()->connect($host, $user, $password, $database, $newLink);
 
                 if (isset($this->config['charset'])) {
-                    $charset = $this->config['charset'];
+                    // Validate charset against an allow-list to prevent SQL injection.
+                    $charset = (string) $this->config['charset'];
+                    if (!preg_match('/^[a-zA-Z0-9_]+$/', $charset)) {
+                        throw new \InvalidArgumentException("Invalid charset name: [{$charset}]");
+                    }
                     $this->getAdapter()->query('SET CHARACTER SET ' . $charset);
                     $this->getAdapter()->query('SET NAMES ' . $charset);
                 }
                 if (isset($this->config['modes'])) {
-                    $this->getAdapter()->query("set session sql_mode='{$this->config['modes']}'");
+                    // Validate modes value to prevent SQL injection.
+                    $modes = (string) $this->config['modes'];
+                    if (!preg_match('/^[a-zA-Z0-9_,]+$/', $modes)) {
+                        throw new \InvalidArgumentException("Invalid sql_mode value: [{$modes}]");
+                    }
+                    $this->getAdapter()->query("set session sql_mode='{$modes}'");
                 }
                 $this->setDatabase($database);
             } catch (Exception $e) {
@@ -167,7 +176,9 @@ class Connection implements ConnectionInterface
         $sql       = is_string($query) ? $query : $query->getString();
         $resultSQL = $this->getAdapter()->execute($sql);
         $result    = new Result($resultSQL, $this->getAdapter());
-        $result->setQuery($query);
+        if ($query instanceof AbstractQuery) {
+            $result->setQuery($query);
+        }
 
         return $result;
     }
