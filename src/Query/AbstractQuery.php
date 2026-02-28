@@ -38,6 +38,13 @@ abstract class AbstractQuery
 
     protected ?string $string = null;
 
+    /**
+     * When true, `parseWhere()` and `parseHaving()` emit parameterised SQL
+     * (i.e. keep `?` placeholders) instead of interpolating values.
+     * Set exclusively by {@see getParameterizedSql()}.
+     */
+    private bool $_buildingParameterized = false;
+
     public function setManager(Connection $manager): static
     {
         $this->db = $manager;
@@ -296,6 +303,82 @@ abstract class AbstractQuery
 
     abstract public function assemble(): string;
 
+    // -------------------------------------------------------------------------
+    // Prepared-statement / Symfony DBAL-style support
+    // -------------------------------------------------------------------------
+
+    /**
+     * Return a tuple of `[sql, bindings]` ready for a PDO prepared statement.
+     *
+     * The SQL contains `?` positional placeholders; the bindings array holds
+     * the corresponding values in left-to-right order.
+     *
+     * Compatible with
+     * {@see \Nip\Database\Connections\Connection::executeQuery()} and
+     * {@see \Nip\Database\Connections\Connection::executeStatement()}.
+     *
+     * ```php
+     * [$sql, $params] = $query->from('users')->where('id = ?', 42)->toSql();
+     * $result = $conn->executeQuery($sql, $params);
+     * ```
+     *
+     * @return array{0: string, 1: list<mixed>}
+     */
+    public function toSql(): array
+    {
+        return [$this->getParameterizedSql(), $this->getBindings()];
+    }
+
+    /**
+     * Assemble the SQL with `?` placeholders left intact (values NOT interpolated).
+     *
+     * The normal `getString()` / `assemble()` path is unaffected; this method
+     * temporarily sets a flag so that `parseWhere()` and `parseHaving()` emit
+     * parameterised fragments instead.
+     */
+    public function getParameterizedSql(): string
+    {
+        // Save and reset the assembled-string cache so assemble() runs fresh.
+        $cached = $this->string;
+        $this->string = null;
+
+        $this->_buildingParameterized = true;
+        $sql = $this->assemble();
+        $this->_buildingParameterized = false;
+
+        // Restore the original cached string so repeated getString() calls are
+        // not affected.
+        $this->string = $cached;
+
+        return $sql;
+    }
+
+    /**
+     * Return a flat list of all binding values for the current WHERE + HAVING
+     * conditions, in left-to-right order matching the `?` placeholders in
+     * {@see getParameterizedSql()}.
+     *
+     * @return list<mixed>
+     */
+    public function getBindings(): array
+    {
+        $bindings = [];
+
+        if ($this->parts['where'] instanceof Condition) {
+            foreach ($this->parts['where']->getBindings() as $b) {
+                $bindings[] = $b;
+            }
+        }
+
+        if (isset($this->parts['having']) && $this->parts['having'] instanceof Condition) {
+            foreach ($this->parts['having']->getBindings() as $b) {
+                $bindings[] = $b;
+            }
+        }
+
+        return $bindings;
+    }
+
     /** @return array<string, mixed> */
     public function getParts(): array
     {
@@ -311,7 +394,13 @@ abstract class AbstractQuery
 
     protected function parseWhere(): string
     {
-        return ($this->parts['where'] instanceof Condition) ? (string) $this->parts['where'] : '';
+        if (!($this->parts['where'] instanceof Condition)) {
+            return '';
+        }
+
+        return $this->_buildingParameterized
+            ? $this->parts['where']->getParameterizedString()
+            : (string) $this->parts['where'];
     }
 
     protected function assembleLimit(): string
@@ -367,11 +456,15 @@ abstract class AbstractQuery
 
     protected function parseHaving(): string
     {
-        if (isset($this->parts['having'])) {
-            return (string) $this->parts['having'];
+        if (!isset($this->parts['having'])) {
+            return '';
         }
 
-        return '';
+        if ($this->_buildingParameterized && $this->parts['having'] instanceof Condition) {
+            return $this->parts['having']->getParameterizedString();
+        }
+
+        return (string) $this->parts['having'];
     }
 
     protected function parseOrder(): string

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Nip\Database\Connections;
 
 use Nip\Database\Adapters\HasAdapterTrait;
+use Nip\Database\Adapters\PreparedStatementAdapterInterface;
 use Nip\Database\Exception;
 use Nip\Database\Metadata\HasMetadata;
 use Nip\Database\Query\AbstractQuery as AbstractQuery;
@@ -197,6 +198,46 @@ class Connection implements ConnectionInterface
     public function affectedRows(): int
     {
         return $this->getAdapter()->affectedRows();
+    }
+
+    // -------------------------------------------------------------------------
+    // Symfony DBAL-style parameterised execution
+    // -------------------------------------------------------------------------
+
+    /**
+     * {@inheritdoc}
+     */
+    public function executeQuery(string $sql, array $params = []): Result
+    {
+        $this->_queries[] = $sql;
+
+        $adapter = $this->getAdapter();
+
+        if ($params !== [] && $adapter instanceof PreparedStatementAdapterInterface) {
+            $resultSQL = $adapter->executeWithParams($sql, $params);
+        } else {
+            $resultSQL = $adapter->execute($sql);
+        }
+
+        return new Result($resultSQL, $adapter);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function executeStatement(string $sql, array $params = []): int
+    {
+        $this->_queries[] = $sql;
+
+        $adapter = $this->getAdapter();
+
+        if ($params !== [] && $adapter instanceof PreparedStatementAdapterInterface) {
+            $adapter->executeWithParams($sql, $params);
+        } else {
+            $adapter->execute($sql);
+        }
+
+        return $adapter->affectedRows();
     }
 
     /**

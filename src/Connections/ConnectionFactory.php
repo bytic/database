@@ -7,6 +7,7 @@ namespace Nip\Database\Connections;
 use InvalidArgumentException;
 use Nip\Config\Config;
 use Nip\Container\Container;
+use Nip\Database\Adapters\PdoAdapter;
 use Nip\Database\Connectors\MySqlConnector;
 use Nip\Utility\Arr;
 use PDOException;
@@ -52,16 +53,27 @@ class ConnectionFactory
     /**
      * Create a single connection from a normalised configuration array.
      *
+     * When the config contains `driver => pdo_mysql` or `use_pdo => true` the
+     * connection is wired with the PDO adapter (via MySqlConnector) instead of
+     * the legacy MySQLi adapter.  All other config keys are unchanged.
+     *
      * @param  array<string, mixed> $config
      */
     protected function createSingleConnection(array $config): Connection
     {
-        $pdo    = $this->createPdoResolver($config);
         $driver = $config['driver'] ?? 'mysql';
+        $usePdo = ($driver === 'pdo_mysql') || !empty($config['use_pdo']);
 
-        $connection = $this->createConnection(
+        if ($usePdo) {
+            return $this->createPdoConnection($config);
+        }
+
+        // $pdoResolver is currently always false (deprecated legacy shim); kept
+        // here so that createConnection() signature remains intact.
+        $pdoResolver = $this->createPdoResolver($config);
+        $connection  = $this->createConnection(
             $driver,
-            $pdo,
+            $pdoResolver,
             $config['database'] ?? '',
             $config['prefix']   ?? '',
             $config
@@ -73,6 +85,37 @@ class ConnectionFactory
             $config['password'] ?? '',
             $config['database'] ?? ''
         );
+
+        return $connection;
+    }
+
+    /**
+     * Create a Connection backed by the PDO adapter.
+     *
+     * Uses {@see MySqlConnector} to build the PDO instance so that all the
+     * Symfony-style charset / timezone / strict-mode configuration is applied.
+     *
+     * @param  array<string, mixed> $config
+     */
+    protected function createPdoConnection(array $config): Connection
+    {
+        $pdoInstance = (new MySqlConnector())->connect($config);
+
+        $adapter = new PdoAdapter();
+        $adapter->setPdo($pdoInstance);
+
+        // Normalise the driver name so `createConnection()` receives 'mysql'.
+        $config['driver'] = 'mysql';
+
+        $connection = $this->createConnection(
+            'mysql',
+            false,
+            $config['database'] ?? '',
+            $config['prefix']   ?? '',
+            $config
+        );
+
+        $connection->setAdapter($adapter);
 
         return $connection;
     }

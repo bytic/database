@@ -84,4 +84,44 @@ interface ConnectionInterface
      * Escape and quote a table/column identifier using back-ticks.
      */
     public function protect(string $input): string;
+
+    // -------------------------------------------------------------------------
+    // Symfony DBAL-style parameterised execution
+    // -------------------------------------------------------------------------
+
+    /**
+     * Execute a parameterised SELECT (or any query that returns rows).
+     *
+     * When the underlying adapter implements
+     * {@see \Nip\Database\Adapters\PreparedStatementAdapterInterface} (e.g.
+     * the PDO adapter) the values are passed as bound parameters; otherwise
+     * the call falls back to a plain `execute($sql)` so the MySQLi adapter
+     * continues to work unchanged.
+     *
+     * ```php
+     * // Raw SQL
+     * $result = $conn->executeQuery('SELECT * FROM users WHERE id = ?', [42]);
+     *
+     * // Query builder
+     * [$sql, $params] = $conn->newSelect()->from('users')->where('id = ?', 42)->toSql();
+     * $result = $conn->executeQuery($sql, $params);
+     * ```
+     *
+     * @param  array<int|string, mixed> $params  Positional (`?`) binding values.
+     */
+    public function executeQuery(string $sql, array $params = []): Result;
+
+    /**
+     * Execute a parameterised INSERT / UPDATE / DELETE and return the affected-row count.
+     *
+     * ```php
+     * $affected = $conn->executeStatement(
+     *     'UPDATE users SET active = ? WHERE id = ?',
+     *     [1, 42]
+     * );
+     * ```
+     *
+     * @param  array<int|string, mixed> $params  Positional (`?`) binding values.
+     */
+    public function executeStatement(string $sql, array $params = []): int;
 }

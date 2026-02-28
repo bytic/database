@@ -100,6 +100,111 @@ class Condition
         return $this;
     }
 
+    // -------------------------------------------------------------------------
+    // Prepared-statement support
+    // -------------------------------------------------------------------------
+
+    /**
+     * Return the SQL template with `?` positional placeholders intact.
+     *
+     * For array values the single `?` is expanded to `(?,?,…)` so the
+     * returned string is ready to be passed to a PDO prepared statement.
+     * Sub-query values are rendered inline (they cannot be parameterised).
+     *
+     * @return string SQL fragment, e.g. `"id = ?"` or `"status IN (?,?)"`
+     */
+    public function getParameterizedString(): string
+    {
+        $string = $this->_string;
+        $values = $this->_values;
+
+        $count = substr_count($string, '?');
+
+        if ($count === 0) {
+            return $string;
+        }
+
+        // Normalise single-placeholder case to an array for uniform iteration.
+        if ($count === 1) {
+            $values = [$values];
+        }
+
+        if (!is_array($values)) {
+            return $string;
+        }
+
+        foreach ($values as $value) {
+            if ($value instanceof Query) {
+                // Sub-query: render parameterised SQL inline.
+                $inline = '(' . $value->getParameterizedSql() . ')';
+                $pos    = strpos($string, '?');
+                if ($pos !== false) {
+                    $string = substr_replace($string, $inline, $pos, 1);
+                }
+            } elseif (is_array($value)) {
+                // IN / NOT IN list: expand one `?` to `(?,?,…)`.
+                $placeholders = implode(', ', array_fill(0, count($value), '?'));
+                $pos          = strpos($string, '?');
+                if ($pos !== false) {
+                    $string = substr_replace($string, '(' . $placeholders . ')', $pos, 1);
+                }
+            }
+            // Scalar: leave the single `?` in place.
+        }
+
+        return $string;
+    }
+
+    /**
+     * Return a flat list of binding values corresponding to the `?` placeholders
+     * produced by {@see getParameterizedString()}.
+     *
+     * Sub-query bindings are recursively merged in left-to-right order.
+     *
+     * @return list<mixed>
+     */
+    public function getBindings(): array
+    {
+        $values = $this->_values;
+
+        if ($values === null || $values === []) {
+            return [];
+        }
+
+        $count = substr_count($this->_string, '?');
+
+        if ($count === 0) {
+            return [];
+        }
+
+        if ($count === 1) {
+            $values = [$values];
+        }
+
+        if (!is_array($values)) {
+            return [];
+        }
+
+        $bindings = [];
+
+        foreach ($values as $value) {
+            if ($value instanceof Query) {
+                // Recursively include the sub-query's bindings.
+                foreach ($value->getBindings() as $b) {
+                    $bindings[] = $b;
+                }
+            } elseif (is_array($value)) {
+                foreach ($value as $v) {
+                    $bindings[] = $v;
+                }
+            } else {
+                $bindings[] = $value;
+            }
+        }
+
+        return $bindings;
+    }
+
     public function and_(Condition $condition): AndCondition
     {
         return new AndCondition($this, $condition);
