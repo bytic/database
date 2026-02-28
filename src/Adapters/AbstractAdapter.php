@@ -1,30 +1,34 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Nip\Database\Adapters;
 
 use Nip\Database\Adapters\Profiler\Profiler;
 
 /**
- * Class AbstractAdapter.
+ * Base adapter: wraps the driver-specific query() call with optional profiling.
+ *
  * @package Nip\Database\Adapters
  */
 abstract class AbstractAdapter
 {
-    /**
-     * @var null|Profiler
-     */
-    protected $_profiler = null;
+    protected ?Profiler $_profiler = null;
 
     /**
-     * Executes SQL query
+     * Execute a SQL string, optionally recording a profiling entry.
      *
-     * @param string $sql
-     * @return mixed
+     * Triggers a PHP warning and returns false when the underlying driver
+     * reports an error – this preserves the legacy behaviour so that callers
+     * that check the return value continue to work.
      */
-    public function execute($sql)
+    public function execute(string $sql): mixed
     {
+        $profile = null;
+
         if ($this->hasProfiler()) {
-            if ($profile = $this->getProfiler()->start()) {
+            $profile = $this->getProfiler()->start();
+            if ($profile !== null) {
                 $profile->setName($sql);
                 $profile->setAdapter($this);
             }
@@ -38,71 +42,56 @@ abstract class AbstractAdapter
 
         if ($result !== false) {
             return $result;
-        } else {
-            trigger_error($this->error() . " [$sql]", E_USER_WARNING);
         }
+
+        trigger_error($this->error() . " [$sql]", E_USER_WARNING);
 
         return false;
     }
 
-    /**
-     * @return bool
-     */
-    public function hasProfiler()
+    public function hasProfiler(): bool
     {
-        return is_object($this->_profiler);
+        return $this->_profiler instanceof Profiler;
     }
 
-    /**
-     * @return Profiler|null
-     */
-    public function getProfiler()
+    public function getProfiler(): ?Profiler
     {
         return $this->_profiler;
     }
 
-    /**
-     * @param Profiler $profiler
-     */
-    public function setProfiler($profiler)
+    public function setProfiler(Profiler $profiler): void
     {
         $this->_profiler = $profiler;
     }
 
-    /**
-     * @param string $sql
-     */
-    abstract public function query($sql);
+    /** Execute a raw SQL string against the driver. */
+    abstract public function query(string $sql): mixed;
 
-    abstract public function error();
+    abstract public function error(): string;
 
-    public function newProfiler()
+    public function newProfiler(): Profiler
     {
-        $profiler = new Profiler();
-
-        return $profiler;
+        return new Profiler();
     }
 
-    abstract public function quote($value);
+    abstract public function quote(mixed $value): int|float|string;
 
-    abstract public function cleanData($data);
+    abstract public function cleanData(mixed $data): mixed;
 
     abstract public function connect(
-        $host = false,
-        $user = false,
-        $password = false,
-        $database = false,
-        $newLink = false
-    );
+        string $host = '',
+        string $user = '',
+        string $password = '',
+        string $database = '',
+        bool $newLink = false
+    ): mixed;
 
-    /**
-     * @param string $table
-     */
-    abstract public function describeTable($table);
+    abstract public function describeTable(string $table): array|false;
 
-    abstract public function disconnect();
+    abstract public function disconnect(): void;
 
-    abstract public function lastInsertID();
+    abstract public function lastInsertID(): int|string;
 
-    abstract public function affectedRows();
+    abstract public function affectedRows(): int;
 }
+

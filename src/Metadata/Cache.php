@@ -1,18 +1,21 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Nip\Database\Metadata;
 
 use Nip\Cache\Manager as CacheManager;
 use Nip\Database\Connections\Connection;
-use Nip\Database\Connections\HasConnectionTrait;
 
 /**
- * Class Cache
+ * Caches DESCRIBE / SHOW INDEX results so the database is not queried on
+ * every page load.
+ *
  * @package Nip\Database\Metadata
  */
 class Cache extends CacheManager
 {
-    protected $metadata;
+    protected ?Manager $metadata = null;
 
     public function __construct()
     {
@@ -21,57 +24,40 @@ class Cache extends CacheManager
     }
 
     /**
-     * @param $table
-     * @return mixed
+     * Return the cached (or freshly generated) metadata for a table.
+     *
+     * @return array<string, mixed>|null
      */
-    public function describeTable($table)
+    public function describeTable(string $table): ?array
     {
         $cacheId = $this->getCacheId($table);
 
         return $this->get($cacheId);
     }
 
-    /**
-     * @param $table
-     * @return string
-     */
-    public function getCacheId($table)
+    public function getCacheId(string $table): string
     {
         return $this->getConnection()->getDatabase() . '.' . $table;
     }
 
-    /**
-     * @return Connection
-     */
-    public function getConnection()
+    public function getConnection(): Connection
     {
         return $this->getMetadata()->getConnection();
     }
 
-    /**
-     * @return Manager
-     */
-    public function getMetadata()
+    public function getMetadata(): Manager
     {
         return $this->metadata;
     }
 
-    /**
-     * @param $metadata
-     * @return $this
-     */
-    public function setMetadata($metadata)
+    public function setMetadata(Manager $metadata): static
     {
         $this->metadata = $metadata;
 
         return $this;
     }
 
-    /**
-     * @param $cacheId
-     * @return mixed
-     */
-    public function get($cacheId)
+    public function get(mixed $cacheId): mixed
     {
         if (!$this->valid($cacheId)) {
             $this->reload($cacheId);
@@ -80,35 +66,26 @@ class Cache extends CacheManager
         return $this->getData($cacheId);
     }
 
-    /**
-     * @param $cacheId
-     * @return mixed
-     */
-    public function reload($cacheId)
+    public function reload(mixed $cacheId): mixed
     {
         $data = $this->generate($cacheId);
+
         if (is_array($data) && isset($data['fields'])) {
             return $this->saveData($cacheId, $data);
         }
+
         return false;
     }
 
-    /**
-     * @param $cacheId
-     * @return mixed
-     */
-    public function generate($cacheId)
+    public function generate(string $cacheId): mixed
     {
-        $data = $this->getConnection()->describeTable($cacheId);
-        $this->data[$cacheId] = $data;
+        $data                  = $this->getConnection()->describeTable($cacheId);
+        $this->data[$cacheId]  = $data;
 
         return $data;
     }
 
-    /**
-     * @return string
-     */
-    public function cachePath()
+    public function cachePath(): string
     {
         return parent::cachePath() . '/db-metadata/';
     }

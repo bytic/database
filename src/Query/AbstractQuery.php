@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Nip\Database\Query;
 
 use Nip\Database\Connections\Connection;
@@ -7,39 +9,43 @@ use Nip\Database\Query\Condition\Condition;
 use Nip\Database\Result;
 
 /**
- * Class AbstractQuery
+ * Base query builder.
+ *
+ * Provides a fluent, magic-method-driven interface for building SQL queries.
+ * Sub-classes implement {@see assemble()} to produce the final SQL string.
+ *
+ * @method $this setCols(array|string $cols = null)
+ * @method $this setWhere(array|string $cols = null)
+ * @method $this cols(array|string $cols)
+ * @method $this count(string $col, string $alias = null)
+ * @method $this sum(array|string $cols)
+ * @method $this from(array|string $from)
+ * @method $this data(array $data)
+ * @method $this table(array|string $table)
+ * @method $this order(array|string $order)
+ * @method $this group(array|string $group, bool $rollup = false)
+ *
  * @package Nip\Database\Query
- *
- * @method $this setCols() setCols(array | string $cols = null)
- * @method $this setWhere() setWhere(array | string $cols = null)
- *
- * @method $this cols() cols(array | string $cols)
- * @method $this count() count(string $col, string $alias = null)
- * @method $this sum() sum(array | string $cols)
- * @method $this from() from(array | string $from)
- * @method $this data() data(array $data)
- * @method $this table() table(array | string $table)
- * @method $this order() order(array | string $order)\
- * @method $this group() group(array | string $group, $rollup = false)\
  */
 abstract class AbstractQuery
 {
-    /**
-     * @var Connection
-     */
-    protected $db;
+    protected Connection $db;
 
-    protected $parts = [
+    /** @var array<string, mixed> */
+    protected array $parts = [
         'where' => null,
     ];
 
-    protected $string = null;
+    protected ?string $string = null;
 
     /**
-     * @param Connection $manager
-     * @return $this
+     * When true, `parseWhere()` and `parseHaving()` emit parameterised SQL
+     * (i.e. keep `?` placeholders) instead of interpolating values.
+     * Set exclusively by {@see getParameterizedSql()}.
      */
-    public function setManager(Connection $manager)
+    private bool $_buildingParameterized = false;
+
+    public function setManager(Connection $manager): static
     {
         $this->db = $manager;
 
@@ -47,15 +53,15 @@ abstract class AbstractQuery
     }
 
     /**
-     * @param $name
-     * @param $arguments
-     * @return $this
+     * Magic method: routes set*() calls to initPart() and any other call to addPart().
+     *
+     * @param string $name
+     * @param array<int, mixed> $arguments
      */
-    public function __call($name, $arguments)
+    public function __call(string $name, array $arguments): static
     {
-        if (strpos($name, 'set') === 0) {
-            $name = str_replace('set', '', $name);
-            $name[0] = strtolower($name[0]);
+        if (str_starts_with($name, 'set')) {
+            $name = lcfirst(substr($name, 3));
             $this->initPart($name);
         }
 
@@ -66,11 +72,7 @@ abstract class AbstractQuery
         return $this;
     }
 
-    /**
-     * @param $name
-     * @return $this
-     */
-    protected function initPart($name)
+    protected function initPart(string $name): static
     {
         $this->isGenerated(false);
         $this->parts[$name] = [];
@@ -78,11 +80,7 @@ abstract class AbstractQuery
         return $this;
     }
 
-    /**
-     * @param boolean $generated
-     * @return bool
-     */
-    public function isGenerated($generated = null)
+    public function isGenerated(bool|null $generated = null): bool
     {
         if ($generated === false) {
             $this->string = null;
@@ -91,12 +89,7 @@ abstract class AbstractQuery
         return $this->string !== null;
     }
 
-    /**
-     * @param $name
-     * @param $value
-     * @return $this
-     */
-    protected function addPart($name, $value)
+    protected function addPart(string $name, mixed $value): static
     {
         if (!isset($this->parts[$name])) {
             $this->initPart($name);
@@ -108,10 +101,8 @@ abstract class AbstractQuery
         return $this;
     }
 
-    /**
-     * @param $params
-     */
-    public function addParams($params)
+    /** @param array<string, mixed> $params */
+    public function addParams(array $params): void
     {
         $this->checkParamSelect($params);
         $this->checkParamFrom($params);
@@ -122,30 +113,24 @@ abstract class AbstractQuery
         $this->checkParamLimit($params);
     }
 
-    /**
-     * @param $params
-     */
-    protected function checkParamSelect($params)
+    /** @param array<string, mixed> $params */
+    protected function checkParamSelect(array $params): void
     {
         if (isset($params['select']) && is_array($params['select'])) {
             call_user_func_array([$this, 'cols'], $params['select']);
         }
     }
 
-    /**
-     * @param $params
-     */
-    protected function checkParamFrom($params)
+    /** @param array<string, mixed> $params */
+    protected function checkParamFrom(array $params): void
     {
         if (isset($params['from']) && !empty($params['from'])) {
             $this->from($params['from']);
         }
     }
 
-    /**
-     * @param $params
-     */
-    protected function checkParamWhere($params)
+    /** @param array<string, mixed> $params */
+    protected function checkParamWhere(array $params): void
     {
         if (isset($params['where']) && is_array($params['where'])) {
             foreach ($params['where'] as $condition) {
@@ -154,25 +139,25 @@ abstract class AbstractQuery
                     $this->where($condition);
                     continue;
                 }
-                $condition = (array)$condition;
+                $condition = (array) $condition;
                 $this->where(
                     $condition[0],
-                    isset($condition[1]) ? $condition[1] : null
+                    $condition[1] ?? null
                 );
             }
         }
     }
 
     /**
-     * @param $string
-     * @param array $values
-     * @return $this
+     * Add a WHERE clause (AND-chained).
+     *
+     * @param Condition|string $string
+     * @param mixed            $values
      */
-    public function where($string, $values = [])
+    public function where(mixed $string, mixed $values = []): static
     {
-        /** @var Condition $this ->_parts[] */
         if ($string) {
-            if (isset($this->parts['where']) && $this->parts['where'] instanceof Condition) {
+            if ($this->parts['where'] instanceof Condition) {
                 $this->parts['where'] = $this->parts['where']->and_($this->getCondition($string, $values));
             } else {
                 $this->parts['where'] = $this->getCondition($string, $values);
@@ -183,15 +168,15 @@ abstract class AbstractQuery
     }
 
     /**
-     * @param string $string
-     * @param array $values
+     * Build or return a Condition instance.
      *
-     * @return Condition
+     * @param Condition|string $string
+     * @param mixed            $values
      */
-    public function getCondition($string, $values = [])
+    public function getCondition(mixed $string, mixed $values = []): Condition
     {
         if (!is_object($string)) {
-            $condition = new Condition($string, $values);
+            $condition = new Condition((string) $string, $values);
             $condition->setQuery($this);
         } else {
             $condition = $string;
@@ -200,55 +185,42 @@ abstract class AbstractQuery
         return $condition;
     }
 
-    /**
-     * @param $params
-     */
-    protected function checkParamOrder($params)
+    /** @param array<string, mixed> $params */
+    protected function checkParamOrder(array $params): void
     {
         if (isset($params['order']) && !empty($params['order'])) {
             call_user_func_array([$this, 'order'], $params['order']);
         }
     }
 
-    /**
-     * @param $params
-     */
-    protected function checkParamGroup($params)
+    /** @param array<string, mixed> $params */
+    protected function checkParamGroup(array $params): void
     {
         if (isset($params['group']) && !empty($params['group'])) {
             call_user_func_array([$this, 'group'], [$params['group']]);
         }
     }
 
-    /**
-     * @param $params
-     */
-    protected function checkParamHaving($params)
+    /** @param array<string, mixed> $params */
+    protected function checkParamHaving(array $params): void
     {
         if (isset($params['having']) && !empty($params['having'])) {
             call_user_func_array([$this, 'having'], [$params['having']]);
         }
     }
 
-    /**
-     * @param $params
-     */
-    protected function checkParamLimit($params)
+    /** @param array<string, mixed> $params */
+    protected function checkParamLimit(array $params): void
     {
         if (isset($params['limit']) && !empty($params['limit'])) {
             call_user_func_array([$this, 'limit'], [$params['limit']]);
         }
     }
 
-    /**
-     * @param integer $start
-     * @param bool $offset
-     * @return $this
-     */
-    public function limit($start, $offset = false)
+    public function limit(int|string $start, int|string|false $offset = false): static
     {
-        $this->parts['limit'] = $start;
-        if ($offset) {
+        $this->parts['limit'] = (string) $start;
+        if ($offset !== false) {
             $this->parts['limit'] .= ',' . $offset;
         }
 
@@ -256,12 +228,12 @@ abstract class AbstractQuery
     }
 
     /**
-     * @param $string
-     * @param array $values
+     * Add a WHERE clause (OR-chained).
      *
-     * @return $this
+     * @param Condition|string $string
+     * @param mixed            $values
      */
-    public function orWhere($string, $values = [])
+    public function orWhere(mixed $string, mixed $values = []): static
     {
         if ($string) {
             if ($this->parts['where'] instanceof Condition) {
@@ -275,140 +247,178 @@ abstract class AbstractQuery
     }
 
     /**
-     * @param $string
-     * @param array $values
+     * Add a HAVING clause (AND-chained).
      *
-     * @return $this
+     * @param Condition|string $string
+     * @param mixed            $values
      */
-    public function having($string, $values = [])
+    public function having(mixed $string, mixed $values = []): static
     {
         if (empty($string)) {
             return $this;
         }
 
-        $condition =  $this->getCondition($string, $values);
-        $having = $this->getPart('having');
+        $condition = $this->getCondition($string, $values);
+        $having    = $this->getPart('having');
 
         if ($having instanceof Condition) {
-            $having = $having->and_($this->getCondition($string, $values));
+            $having = $having->and_($condition);
         } else {
             $having = $condition;
         }
         $this->parts['having'] = $having;
+
         return $this;
     }
 
-    /**
-     * Escapes data for safe use in SQL queries
-     *
-     * @param string $data
-     * @return string
-     */
-    public function cleanData($data)
+    /** Escape a value for safe use in a SQL literal. */
+    public function cleanData(mixed $data): mixed
     {
         return $this->getManager()->getAdapter()->cleanData($data);
     }
 
-    /**
-     * @return Connection
-     */
-    public function getManager()
+    public function getManager(): Connection
     {
         return $this->db;
     }
 
-    /**
-     * @return Result
-     */
-    public function execute()
+    public function execute(): Result
     {
         return $this->getManager()->execute($this);
     }
 
-    /**
-     * Implements magic method.
-     *
-     * @return string This object as a Query string.
-     */
-    public function __toString()
+    public function __toString(): string
     {
         return $this->getString();
     }
 
-    /**
-     * @return string
-     */
-    public function getString()
+    public function getString(): string
     {
         if ($this->string === null) {
-            $this->string = (string)$this->assemble();
+            $this->string = (string) $this->assemble();
         }
 
         return $this->string;
     }
 
-    /**
-     * @return null
-     */
-    abstract public function assemble();
+    abstract public function assemble(): string;
+
+    // -------------------------------------------------------------------------
+    // Prepared-statement / Symfony DBAL-style support
+    // -------------------------------------------------------------------------
 
     /**
-     * @return array
+     * Return a tuple of `[sql, bindings]` ready for a PDO prepared statement.
+     *
+     * The SQL contains `?` positional placeholders; the bindings array holds
+     * the corresponding values in left-to-right order.
+     *
+     * Compatible with
+     * {@see \Nip\Database\Connections\Connection::executeQuery()} and
+     * {@see \Nip\Database\Connections\Connection::executeStatement()}.
+     *
+     * ```php
+     * [$sql, $params] = $query->from('users')->where('id = ?', 42)->toSql();
+     * $result = $conn->executeQuery($sql, $params);
+     * ```
+     *
+     * @return array{0: string, 1: list<mixed>}
      */
-    public function getParts()
+    public function toSql(): array
+    {
+        return [$this->getParameterizedSql(), $this->getBindings()];
+    }
+
+    /**
+     * Assemble the SQL with `?` placeholders left intact (values NOT interpolated).
+     *
+     * The normal `getString()` / `assemble()` path is unaffected; this method
+     * temporarily sets a flag so that `parseWhere()` and `parseHaving()` emit
+     * parameterised fragments instead.
+     */
+    public function getParameterizedSql(): string
+    {
+        // Save and reset the assembled-string cache so assemble() runs fresh.
+        $cached = $this->string;
+        $this->string = null;
+
+        $this->_buildingParameterized = true;
+        $sql = $this->assemble();
+        $this->_buildingParameterized = false;
+
+        // Restore the original cached string so repeated getString() calls are
+        // not affected.
+        $this->string = $cached;
+
+        return $sql;
+    }
+
+    /**
+     * Return a flat list of all binding values for the current WHERE + HAVING
+     * conditions, in left-to-right order matching the `?` placeholders in
+     * {@see getParameterizedSql()}.
+     *
+     * @return list<mixed>
+     */
+    public function getBindings(): array
+    {
+        $bindings = [];
+
+        if ($this->parts['where'] instanceof Condition) {
+            foreach ($this->parts['where']->getBindings() as $b) {
+                $bindings[] = $b;
+            }
+        }
+
+        if (isset($this->parts['having']) && $this->parts['having'] instanceof Condition) {
+            foreach ($this->parts['having']->getBindings() as $b) {
+                $bindings[] = $b;
+            }
+        }
+
+        return $bindings;
+    }
+
+    /** @return array<string, mixed> */
+    public function getParts(): array
     {
         return $this->parts;
     }
 
-    /**
-     * @return null|string
-     */
-    protected function assembleWhere()
+    protected function assembleWhere(): string
     {
         $where = $this->parseWhere();
 
-        if (!empty($where)) {
-            return " WHERE $where";
+        return !empty($where) ? " WHERE {$where}" : '';
+    }
+
+    protected function parseWhere(): string
+    {
+        if (!($this->parts['where'] instanceof Condition)) {
+            return '';
         }
 
-        return null;
+        return $this->_buildingParameterized
+            ? $this->parts['where']->getParameterizedString()
+            : (string) $this->parts['where'];
     }
 
-    /**
-     * @return string
-     */
-    protected function parseWhere()
-    {
-        return is_object($this->parts['where']) ? (string)$this->parts['where'] : '';
-    }
-
-    /**
-     * @return null|string
-     */
-    protected function assembleLimit()
+    protected function assembleLimit(): string
     {
         $limit = $this->getPart('limit');
         if (!empty($limit)) {
-            return " LIMIT {$this->parts['limit']}";
+            return " LIMIT {$limit}";
         }
 
-        return null;
+        return '';
     }
 
-    /**
-     * @param string $name
-     * @return mixed|null
-     */
-    public function getPart($name)
+    public function getPart(string $name): mixed
     {
         return $this->hasPart($name) ? $this->parts[$name] : null;
     }
 
-    /**
-     * @param $name
-     * @return bool
-     */
-    public function hasPart($name)
+    public function hasPart(string $name): bool
     {
         if (!isset($this->parts[$name])) {
             return false;
@@ -419,20 +429,14 @@ abstract class AbstractQuery
         if (is_array($this->parts[$name]) && count($this->parts[$name]) < 1) {
             return false;
         }
-        if (is_string($this->parts[$name]) && empty($this->parts[$name])) {
+        if (is_string($this->parts[$name]) && $this->parts[$name] === '') {
             return false;
         }
 
         return true;
     }
 
-    /**
-     * @param $name
-     * @param $value
-     *
-     * @return $this
-     */
-    protected function setPart($name, $value)
+    protected function setPart(string $name, mixed $value): static
     {
         $this->initPart($name);
         $this->addPart($name, $value);
@@ -440,41 +444,33 @@ abstract class AbstractQuery
         return $this;
     }
 
-    /**
-     * @return string
-     * @return mixed
-     */
-    protected function getTable()
+    protected function getTable(): string
     {
-        if (!is_array($this->parts['table']) && count($this->parts['table']) < 1) {
+        if (!is_array($this->parts['table']) || count($this->parts['table']) < 1) {
             trigger_error('No Table defined', E_USER_WARNING);
+            return '';
         }
 
-        return reset($this->parts['table']);
+        return (string) reset($this->parts['table']);
     }
 
-    /**
-     * @return string
-     */
-    protected function parseHaving()
+    protected function parseHaving(): string
     {
-        if (isset($this->parts['having'])) {
-            return (string)$this->parts['having'];
+        if (!isset($this->parts['having'])) {
+            return '';
         }
 
-        return '';
+        if ($this->_buildingParameterized && $this->parts['having'] instanceof Condition) {
+            return $this->parts['having']->getParameterizedString();
+        }
+
+        return (string) $this->parts['having'];
     }
 
-    /**
-     * Parses ORDER BY entries.
-     * Parses ORDER BY entries
-     *
-     * @return string
-     */
-    protected function parseOrder()
+    protected function parseOrder(): string
     {
         if (!isset($this->parts['order']) || !is_array($this->parts['order']) || count($this->parts['order']) < 1) {
-            return false;
+            return '';
         }
 
         $orderParts = [];
@@ -485,11 +481,11 @@ abstract class AbstractQuery
                     $itemOrder = [$itemOrder];
                 }
 
-                $column = isset($itemOrder[0]) ? $itemOrder[0] : false;
-                $type = isset($itemOrder[1]) ? $itemOrder[1] : '';
-                $protected = isset($itemOrder[2]) ? $itemOrder[2] : true;
+                $column    = $itemOrder[0] ?? false;
+                $type      = $itemOrder[1] ?? '';
+                $protected = $itemOrder[2] ?? true;
 
-                $column = ($protected ? $this->protect($column) : $column) . ' ' . strtoupper($type);
+                $column = ($protected ? $this->protect((string) $column) : (string) $column) . ' ' . strtoupper((string) $type);
 
                 $orderParts[] = trim($column);
             }
@@ -499,39 +495,23 @@ abstract class AbstractQuery
     }
 
     /**
-     * Adds backticks to input.
+     * Wrap an identifier in back-ticks.
      *
-     * @param string $input
-     *
-     * @return string
+     * Function calls (containing '(') are left as-is.
      */
-    protected function protect($input)
+    protected function protect(string $input): string
     {
-        return strpos($input, '(') !== false ? $input : str_replace(
-            "`*`",
-            "*",
-            '`' . str_replace('.', '`.`', $input) . '`'
-        );
+        return str_contains($input, '(')
+            ? $input
+            : str_replace('`*`', '*', '`' . str_replace('.', '`.`', $input) . '`');
     }
 
-    /**
-     * Prefixes table names
-     *
-     * @param string $table
-     * @return string
-     */
-    protected function tableName($table = '')
+    protected function tableName(string $table = ''): string
     {
         return $this->getManager()->tableName($table);
     }
 
-    /**
-     * Removes backticks from input
-     *
-     * @param string $input
-     * @return string
-     */
-    protected function cleanProtected($input)
+    protected function cleanProtected(string $input): string
     {
         return str_replace('`', '', $input);
     }

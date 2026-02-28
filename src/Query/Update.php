@@ -1,47 +1,45 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Nip\Database\Query;
 
 /**
- * Class Update
+ * UPDATE query builder.
+ *
  * @package Nip\Database\Query
  */
 class Update extends AbstractQuery
 {
-    /**
-     * @return string
-     */
-    public function assemble()
+    public function assemble(): string
     {
-        $query = 'UPDATE ' . $this->protect($this->getTable()) . ' SET ' . $this->parseUpdate();
-
+        $query  = 'UPDATE ' . $this->protect($this->getTable()) . ' SET ' . $this->parseUpdate();
         $query .= $this->assembleWhere();
         $query .= $this->assembleLimit();
 
         return $query;
     }
 
-    /**
-     * @return bool|string
-     */
-    public function parseUpdate()
+    public function parseUpdate(): string
     {
-        if (!$this->parts['data']) {
-            return false;
+        if (empty($this->parts['data'])) {
+            return '';
         }
+
         $fields = [];
+
         foreach ($this->parts['data'] as $data) {
             foreach ($data as $key => $values) {
                 if (!is_array($values)) {
                     $values = [$values];
                 }
                 $value = $values[0];
-                $quote = isset($values[1]) ? $values[1] : null;
+                $quote = $values[1] ?? null;
 
                 if ($value === null) {
                     $value = 'NULL';
                 } elseif (!is_numeric($value)) {
-                    if (is_null($quote)) {
+                    if ($quote === null) {
                         $quote = true;
                     }
                     if ($quote) {
@@ -49,10 +47,10 @@ class Update extends AbstractQuery
                     }
                 }
 
-                $fields[] = "{$this->protect($key)} = $value";
+                $fields[] = "{$this->protect((string) $key)} = {$value}";
             }
         }
 
-        return implode(", ", $fields);
+        return implode(', ', $fields);
     }
 }

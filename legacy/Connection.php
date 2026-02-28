@@ -1,11 +1,11 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Nip\Database;
 
 /**
- * Class Connection
- * @package Nip\Database
- * @deprecated use \Nip\Database\Connections\Connection
+ * @deprecated Use \Nip\Database\Connections\Connection instead.
  */
 class Connection extends \Nip\Database\Connections\Connection
 {

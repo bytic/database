@@ -1,42 +1,38 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Nip\Database\Adapters\Profiler;
 
 /**
- * Class Profiler
+ * Database query profiler.
+ *
+ * Extends the generic Nip_Profiler with SQL-specific filtering by query type
+ * and optional per-query timing filters.
+ *
  * @package Nip\Database\Adapters\Profiler
  */
 class Profiler extends \Nip_Profiler
 {
-    public $filterTypes = null;
+    /** @var array<int, string>|null */
+    public ?array $filterTypes = null;
 
-    /**
-     * @param $id
-     * @return QueryProfile|\Nip\Profiler\Profile
-     */
-    public function newProfile($id)
+    public function newProfile(mixed $id): QueryProfile
     {
         return new QueryProfile($id);
     }
 
-    /**
-     * @param $profile
-     * @return bool
-     */
-    protected function applyFilters($profile)
+    protected function applyFilters(mixed $profile): bool
     {
         if (parent::applyFilters($profile)) {
             return $this->secondsFilter($profile);
         }
+        return false;
     }
 
-    /**
-     * @param $profile
-     * @return bool
-     */
-    public function typeFilter($profile)
+    public function typeFilter(mixed $profile): bool
     {
-        if (is_array($this->filterTypes) && in_array($profile->type, $this->filterTypes)) {
+        if (is_array($this->filterTypes) && in_array($profile->type, $this->filterTypes, true)) {
             $this->deleteProfile($profile);
 
             return false;
@@ -45,11 +41,7 @@ class Profiler extends \Nip_Profiler
         return true;
     }
 
-    /**
-     * @param null $queryTypes
-     * @return $this
-     */
-    public function setFilterQueryType($queryTypes = null)
+    public function setFilterQueryType(?array $queryTypes = null): static
     {
         $this->filterTypes = $queryTypes;
 

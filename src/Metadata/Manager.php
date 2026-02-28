@@ -1,37 +1,40 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Nip\Database\Metadata;
 
 use Nip\Database\Connections\HasConnectionTrait;
 
 /**
- * Class Manager
+ * Manages database table metadata, delegating persistence to the Cache.
+ *
  * @package Nip\Database\Metadata
  */
 class Manager
 {
     use HasConnectionTrait;
 
-    protected $_cache;
+    protected ?Cache $_cache = null;
 
     /**
-     * @param $table
-     * @return bool|mixed
+     * Return column/index metadata for the given table.
+     *
+     * @return array{fields: array<string, mixed>, indexes: array<string, mixed>}
      */
-    public function describeTable($table)
+    public function describeTable(string $table): array
     {
         $data = $this->getCache()->describeTable($table);
+
         if (!is_array($data)) {
-            return trigger_error("Cannot load metadata for table [$table]", E_USER_ERROR);
+            trigger_error("Cannot load metadata for table [{$table}]", E_USER_ERROR);
+            return [];
         }
 
         return $data;
     }
 
-    /**
-     * @return Cache
-     */
-    public function getCache()
+    public function getCache(): Cache
     {
         if (!$this->_cache) {
             $this->_cache = new Cache();

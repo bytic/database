@@ -1,144 +1,87 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Nip\Database\Connectors;
 
 use PDO;
 
 /**
- * Class Connector
+ * Base PDO connector.
+ *
+ * Handles the low-level PDO instantiation and default option management.
+ * Concrete connectors (e.g. MySqlConnector) extend this class to provide
+ * driver-specific DSN generation and post-connect configuration.
+ *
  * @package Nip\Database\Connectors
  */
 class Connector
 {
     /**
-     * The default PDO connection options.
+     * Default PDO connection options – these can be overridden via the
+     * 'options' key in the database configuration array.
      *
-     * @var array
+     * @var array<int, mixed>
      */
-    protected $options = [
-        PDO::ATTR_CASE => PDO::CASE_NATURAL,
-        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-        PDO::ATTR_ORACLE_NULLS => PDO::NULL_NATURAL,
-        PDO::ATTR_STRINGIFY_FETCHES => false,
-        PDO::ATTR_EMULATE_PREPARES => false,
+    protected array $options = [
+        PDO::ATTR_CASE               => PDO::CASE_NATURAL,
+        PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
+        PDO::ATTR_ORACLE_NULLS       => PDO::NULL_NATURAL,
+        PDO::ATTR_STRINGIFY_FETCHES  => false,
+        PDO::ATTR_EMULATE_PREPARES   => false,
     ];
 
     /**
      * Create a new PDO connection.
      *
-     * @param string $dsn
-     * @param array $config
-     * @param array $options
-     * @return \PDO
-     *
-     * @throws \Exception
+     * @param array<string, mixed> $config
+     * @param array<int, mixed>    $options
      */
-    public function createConnection($dsn, array $config, array $options)
+    public function createConnection(string $dsn, array $config, array $options): PDO
     {
-        [$username, $password] = [
-            $config['username'] ?? null,
-            $config['password'] ?? null,
-        ];
+        $username = $config['username'] ?? null;
+        $password = $config['password'] ?? null;
 
-        try {
-            return $this->createPdoConnection(
-                $dsn,
-                $username,
-                $password,
-                $options
-            );
-        } catch (Exception $e) {
-            return $this->tryAgainIfCausedByLostConnection(
-                $e,
-                $dsn,
-                $username,
-                $password,
-                $options
-            );
-        }
+        return $this->createPdoConnection($dsn, $username, $password, $options);
     }
 
     /**
-     * Create a new PDO connection instance.
-     *
-     * @param string $dsn
-     * @param string $username
-     * @param string $password
-     * @param array $options
-     * @return \PDO
+     * @param array<int, mixed> $options
      */
-    protected function createPdoConnection($dsn, $username, $password, $options)
+    protected function createPdoConnection(string $dsn, ?string $username, ?string $password, array $options): PDO
     {
-        if (class_exists(PDOConnection::class) && !$this->isPersistentConnection($options)) {
-            return new PDOConnection($dsn, $username, $password, $options);
-        }
-
         return new PDO($dsn, $username, $password, $options);
     }
 
     /**
-     * Determine if the connection is persistent.
-     *
-     * @param array $options
-     * @return bool
+     * @param array<int, mixed> $options
      */
-    protected function isPersistentConnection($options)
+    protected function isPersistentConnection(array $options): bool
     {
-        return isset($options[PDO::ATTR_PERSISTENT]) &&
-            $options[PDO::ATTR_PERSISTENT];
+        return isset($options[PDO::ATTR_PERSISTENT]) && (bool) $options[PDO::ATTR_PERSISTENT];
     }
 
     /**
-     * Handle an exception that occurred during connect execution.
+     * Merge driver-level options with any user-supplied overrides.
      *
-     * @param \Throwable $e
-     * @param string $dsn
-     * @param string $username
-     * @param string $password
-     * @param array $options
-     * @return \PDO
-     *
-     * @throws \Exception
+     * @param array<string, mixed> $config
+     * @return array<int, mixed>
      */
-    protected function tryAgainIfCausedByLostConnection(Throwable $e, $dsn, $username, $password, $options)
-    {
-        if ($this->causedByLostConnection($e)) {
-            return $this->createPdoConnection($dsn, $username, $password, $options);
-        }
-
-        throw $e;
-    }
-
-    /**
-     * Get the PDO options based on the configuration.
-     *
-     * @param array $config
-     * @return array
-     */
-    public function getOptions(array $config)
+    public function getOptions(array $config): array
     {
         $options = $config['options'] ?? [];
 
         return array_diff_key($this->options, $options) + $options;
     }
 
-    /**
-     * Get the default PDO connection options.
-     *
-     * @return array
-     */
-    public function getDefaultOptions()
+    /** @return array<int, mixed> */
+    public function getDefaultOptions(): array
     {
         return $this->options;
     }
 
-    /**
-     * Set the default PDO connection options.
-     *
-     * @param array $options
-     * @return void
-     */
-    public function setDefaultOptions(array $options)
+    /** @param array<int, mixed> $options */
+    public function setDefaultOptions(array $options): void
     {
         $this->options = $options;
     }

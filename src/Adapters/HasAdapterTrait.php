@@ -1,66 +1,52 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Nip\Database\Adapters;
 
 /**
- * Trait HasAdapterTrait
+ * Provides lazy-initialised adapter access to any class that uses it.
+ *
  * @package Nip\Database\Adapters
  */
 trait HasAdapterTrait
 {
-    protected $_adapter = null;
+    protected ?AbstractAdapter $_adapter = null;
 
-    /**
-     * @return AbstractAdapter
-     */
-    public function getAdapter()
+    public function getAdapter(): AbstractAdapter
     {
-        if ($this->_adapter == null) {
+        if ($this->_adapter === null) {
             $this->initAdapter();
         }
 
         return $this->_adapter;
     }
 
-    /**
-     * @param $adapter
-     */
-    public function setAdapter($adapter)
+    public function setAdapter(AbstractAdapter $adapter): void
     {
         $this->_adapter = $adapter;
     }
 
-    public function initAdapter()
+    public function initAdapter(): void
     {
         $this->setAdapterName('MySQLi');
     }
 
-    /**
-     * @param $name
-     */
-    public function setAdapterName($name)
+    public function setAdapterName(string $name): void
     {
         $this->setAdapter($this->newAdapter($name));
     }
 
-    /**
-     * @param $name
-     *
-     * @return AbstractAdapter
-     */
-    public function newAdapter($name)
+    public function newAdapter(string $name): AbstractAdapter
     {
         $class = static::getAdapterClass($name);
 
         return new $class();
     }
 
-    /**
-     * @param $name
-     * @return string
-     */
-    public static function getAdapterClass($name)
+    public static function getAdapterClass(string $name): string
     {
-        return '\Nip\Database\Adapters\\' . $name;
+        return '\\Nip\\Database\\Adapters\\' . $name;
     }
 }
+

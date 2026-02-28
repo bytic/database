@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Nip\Database;
 
 use Nip\Database\Adapters\AbstractAdapter;
@@ -7,38 +9,29 @@ use Nip\Database\Adapters\MySQLi;
 use Nip\Database\Query\AbstractQuery;
 
 /**
- * Class Result
+ * Wraps the raw driver result resource and provides row-fetching helpers.
+ *
  * @package Nip\Database
  */
 class Result
 {
-    /**
-     * @var \mysqli_result
-     */
-    protected $resultSQL;
+    protected mixed $resultSQL;
+
+    protected AbstractAdapter $adapter;
+
+    protected ?AbstractQuery $query = null;
+
+    /** @var list<array<string, mixed>> */
+    protected array $results = [];
 
     /**
-     * @var AbstractAdapter| MySQLi
-     */
-    protected $adapter;
-
-    /**
-     * @var AbstractQuery
-     */
-    protected $query;
-
-    protected $results = [];
-
-    /**
-     * Result constructor.
-     *
-     * @param \mysqli_result  $resultSQL
+     * @param mixed           $resultSQL  Raw driver result (e.g. \mysqli_result or bool)
      * @param AbstractAdapter $adapter
      */
-    public function __construct($resultSQL, $adapter)
+    public function __construct(mixed $resultSQL, AbstractAdapter $adapter)
     {
         $this->resultSQL = $resultSQL;
-        $this->adapter = $adapter;
+        $this->adapter   = $adapter;
     }
 
     public function __destruct()
@@ -48,30 +41,24 @@ class Result
         }
     }
 
-    /**
-     * @return AbstractAdapter|MySQLi
-     */
-    public function getAdapter()
+    public function getAdapter(): AbstractAdapter
     {
         return $this->adapter;
     }
 
-    /**
-     * @param AbstractAdapter|MySQLi $adapter
-     */
-    public function setAdapter($adapter)
+    public function setAdapter(AbstractAdapter $adapter): void
     {
         $this->adapter = $adapter;
     }
 
     /**
-     * Fetches all rows from current result set.
+     * Fetch and cache all rows from the current result set.
      *
-     * @return array
+     * @return list<array<string, mixed>>
      */
-    public function fetchResults()
+    public function fetchResults(): array
     {
-        if (count($this->results) == 0) {
+        if (count($this->results) === 0) {
             while ($result = $this->fetchResult()) {
                 $this->results[] = $result;
             }
@@ -81,15 +68,15 @@ class Result
     }
 
     /**
-     * Fetches row from current result set.
+     * Fetch the next row as an associative array.
      *
-     * @return bool|array
+     * @return array<string, mixed>|false
      */
-    public function fetchResult()
+    public function fetchResult(): array|false
     {
         if ($this->checkValid()) {
             try {
-                return $this->getAdapter()->fetchAssoc($this->resultSQL);
+                return $this->getAdapter()->fetchAssoc($this->resultSQL) ?? false;
             } catch (Exception $e) {
                 $e->log();
             }
@@ -98,48 +85,35 @@ class Result
         return false;
     }
 
-    /**
-     * @return bool
-     */
-    public function checkValid()
+    public function checkValid(): bool
     {
         if (!$this->isValid()) {
-            trigger_error("Invalid result for query [" . $this->getQuery()->getString() . "]", E_USER_WARNING);
-
+            trigger_error(
+                'Invalid result for query [' . ($this->query?->getString() ?? '') . ']',
+                E_USER_WARNING
+            );
             return false;
         }
 
         return true;
     }
 
-    /**
-     * @return bool
-     */
-    public function isValid()
+    public function isValid(): bool
     {
         return $this->resultSQL !== false && $this->resultSQL !== null;
     }
 
-    /**
-     * @return AbstractQuery
-     */
-    public function getQuery()
+    public function getQuery(): ?AbstractQuery
     {
         return $this->query;
     }
 
-    /**
-     * @param AbstractQuery $query
-     */
-    public function setQuery($query)
+    public function setQuery(AbstractQuery $query): void
     {
         $this->query = $query;
     }
 
-    /**
-     * @return bool|int
-     */
-    public function numRows()
+    public function numRows(): int|false
     {
         if ($this->checkValid()) {
             return $this->getAdapter()->numRows($this->resultSQL);
@@ -148,3 +122,4 @@ class Result
         return false;
     }
 }
+

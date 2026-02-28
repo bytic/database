@@ -1,30 +1,27 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Nip\Database\Connections;
 
 /**
- * Trait HasConnectionTrait
+ * Provides a typed $connection property and accessor pair.
+ *
  * @package Nip\Database\Connections
  */
 trait HasConnectionTrait
 {
-    protected $connection;
+    protected ?Connection $connection = null;
 
-    /**
-     * @param $wrapper
-     * @return $this
-     */
-    public function setConnection($wrapper)
+    public function setConnection(Connection $connection): static
     {
-        $this->connection = $wrapper;
+        $this->connection = $connection;
         return $this;
     }
 
-    /**
-     * @return Connection
-     */
-    public function getConnection()
+    public function getConnection(): ?Connection
     {
         return $this->connection;
     }
 }
+
