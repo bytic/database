@@ -1,32 +1,29 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Nip\Database\Query\Condition;
 
 /**
- * Class OrCondition
+ * Combines two conditions with OR.
+ *
  * @package Nip\Database\Query\Condition
  */
 class OrCondition extends Condition
 {
-    protected $_condition;
-    protected $_orCondition;
+    protected Condition $_condition;
+    protected Condition $_orCondition;
 
-    /**
-     * OrCondition constructor.
-     * @param $condition
-     * @param $orCondition
-     */
-    public function __construct($condition, $orCondition)
+    public function __construct(Condition $condition, Condition $orCondition)
     {
-        $this->_condition = $condition;
+        $this->_condition  = $condition;
         $this->_orCondition = $orCondition;
     }
 
-    /**
-     * @return string
-     */
-    public function getString()
+    public function getString(): string
     {
-        return $this->protectCondition($this->_condition->getString()) . ' OR ' . $this->protectCondition($this->_orCondition->getString()) . '';
+        return $this->protectCondition($this->_condition->getString())
+            . ' OR '
+            . $this->protectCondition($this->_orCondition->getString());
     }
 }

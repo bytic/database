@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Nip\Database\Connections;
 
 use InvalidArgumentException;
@@ -10,196 +12,119 @@ use Nip\Utility\Arr;
 use PDOException;
 
 /**
- * Class ConnectionFactory
- * @package Nip\Database\Connectors
+ * Factory that creates typed Connection instances from configuration arrays.
+ *
+ * @package Nip\Database\Connections
  */
 class ConnectionFactory
 {
-    /**
-     * The IoC container instance.
-     *
-     * @var Container
-     */
-    protected $container;
+    protected ?Container $container;
 
-    /**
-     * Create a new connection factory instance.
-     *
-     * @param  Container $container
-     */
-    public function __construct(Container $container = null)
+    public function __construct(?Container $container = null)
     {
-        $this->container = $container ? $container : Container::getInstance();
+        $this->container = $container ?? Container::getInstance();
     }
 
     /**
-     * Establish a PDO connection based on the configuration.
+     * Establish a database connection based on the configuration.
      *
-     * @param  array $config
-     * @param  string $name
-     * @return Connection
+     * @param  array<string, mixed>|Config $config
      */
-    public function make($config, $name = null)
+    public function make(array|Config $config, ?string $name = null): Connection
     {
         $config = $this->parseConfig($config, $name);
 
-//        if (isset($config['read'])) {
-//            return $this->createReadWriteConnection($config);
-//        }
         return $this->createSingleConnection($config);
     }
 
     /**
-     * Parse and prepare the database configuration.
+     * Normalise the configuration array.
      *
-     * @param  array $config
-     * @param  string $name
-     * @return array
+     * @param  array<string, mixed>|Config $config
+     * @param  string|null $name
+     * @return array<string, mixed>
      */
-    protected function parseConfig($config, $name)
+    protected function parseConfig(array|Config $config, ?string $name): array
     {
-        return $config;
-//        return Arr::add(Arr::add($config, 'prefix', ''), 'name', $name);
+        return $config instanceof Config ? $config->toArray() : $config;
     }
 
     /**
-     * Create a single database connection instance.
+     * Create a single connection from a normalised configuration array.
      *
-     * @param  array $config
-     * @return Connection
+     * @param  array<string, mixed> $config
      */
-    protected function createSingleConnection($config)
+    protected function createSingleConnection(array $config): Connection
     {
-        $pdo = $this->createPdoResolver($config);
-        if (!isset($config['driver'])) {
-            $config['driver'] = 'mysql';
-        }
-        $connection = $this->createConnection($config['driver'], $pdo, $config['database'], $config['prefix'], $config);
-        $connection->connect($config['host'], $config['username'], $config['password'], $config['database']);
+        $pdo    = $this->createPdoResolver($config);
+        $driver = $config['driver'] ?? 'mysql';
+
+        $connection = $this->createConnection(
+            $driver,
+            $pdo,
+            $config['database'] ?? '',
+            $config['prefix']   ?? '',
+            $config
+        );
+
+        $connection->connect(
+            $config['host']     ?? '',
+            $config['username'] ?? '',
+            $config['password'] ?? '',
+            $config['database'] ?? ''
+        );
 
         return $connection;
     }
 
     /**
-     * Create a new connection instance.
+     * Instantiate the correct Connection sub-class for the given driver.
      *
-     * @param  string $driver
-     * @param  boolean $connection
-     * @param  string $database
-     * @param  string $prefix
-     * @param  array $config
-     * @return Connection
+     * @param  array<string, mixed> $config
      *
-     * @throws \InvalidArgumentException
+     * @throws InvalidArgumentException
      */
-    protected function createConnection($driver, $connection, $database, $prefix = '', $config = [])
-    {
-//        if ($resolver = Connection::getResolver($driver)) {
-//            return $resolver($connection, $database, $prefix, $config);
-//        }
-        switch ($driver) {
-            case 'mysql':
-                return new MySqlConnection($connection, $database, $prefix, $config);
-        }
-
-        throw new InvalidArgumentException("Unsupported driver [$driver]");
+    protected function createConnection(
+        string $driver,
+        mixed $connection,
+        string $database,
+        string $prefix = '',
+        array $config = []
+    ): Connection {
+        return match ($driver) {
+            'mysql' => new MySqlConnection($connection, $database, $prefix, $config),
+            default => throw new InvalidArgumentException("Unsupported driver [{$driver}]"),
+        };
     }
 
     /**
-     * Create a new Closure that resolves to a PDO instance.
+     * Return a PDO resolver closure (currently a no-op; kept for future migration).
      *
-     * @param  array|Config  $config
-     * @return \Closure
+     * @param  array<string, mixed>|Config $config
      */
-    protected function createPdoResolver($config)
+    protected function createPdoResolver(array|Config $config): mixed
     {
         return false;
-        $config = $config instanceof Config ? $config->toArray() : $config;
-        return array_key_exists('host', $config)
-            ? $this->createPdoResolverWithHosts($config)
-            : $this->createPdoResolverWithoutHosts($config);
     }
 
     /**
-     * Create a new Closure that resolves to a PDO instance with a specific host or an array of hosts.
+     * Create a connector instance for the given configuration.
      *
-     * @param  array  $config
-     * @return \Closure
+     * @param  array<string, mixed> $config
      *
-     * @throws \PDOException
+     * @throws InvalidArgumentException
      */
-    protected function createPdoResolverWithHosts(array $config)
+    public function createConnector(array $config): MySqlConnector
     {
-        return function () use ($config) {
-            foreach (Arr::shuffle($hosts = $this->parseHosts($config)) as $key => $host) {
-                $config['host'] = $host;
-
-                try {
-                    return $this->createConnector($config)->connect($config);
-                } catch (PDOException $e) {
-                    continue;
-                }
-            }
-
-            throw $e;
-        };
-    }
-
-    /**
-     * Parse the hosts configuration item into an array.
-     *
-     * @param  array  $config
-     * @return array
-     *
-     * @throws \InvalidArgumentException
-     */
-    protected function parseHosts(array $config)
-    {
-        $hosts = Arr::wrap($config['host']);
-
-        if (empty($hosts)) {
-            throw new InvalidArgumentException('Database hosts array is empty.');
-        }
-
-        return $hosts;
-    }
-
-    /**
-     * Create a new Closure that resolves to a PDO instance where there is no configured host.
-     *
-     * @param  array  $config
-     * @return \Closure
-     */
-    protected function createPdoResolverWithoutHosts(array $config)
-    {
-        return function () use ($config) {
-            return $this->createConnector($config)->connect($config);
-        };
-    }
-
-    /**
-     * Create a connector instance based on the configuration.
-     *
-     * @param  array  $config
-     * @return \Illuminate\Database\Connectors\ConnectorInterface|MySqlConnector
-     *
-     * @throws \InvalidArgumentException
-     */
-    public function createConnector(array $config)
-    {
-        if (! isset($config['driver'])) {
+        $driver = $config['driver'] ?? null;
+        if ($driver === null) {
             throw new InvalidArgumentException('A driver must be specified.');
         }
 
-//        if ($this->container->bound($key = "db.connector.{$config['driver']}")) {
-//            return $this->container->make($key);
-//        }
-
-        switch ($config['driver']) {
-            case 'mysql':
-                return new MySqlConnector();
-        }
-
-        throw new InvalidArgumentException("Unsupported driver [{$config['driver']}].");
+        return match ($driver) {
+            'mysql' => new MySqlConnector(),
+            default => throw new InvalidArgumentException("Unsupported driver [{$driver}]."),
+        };
     }
 }
+

@@ -1,40 +1,29 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Nip\Database\Manager;
 
-use Nip\Application;
-
 /**
- * Trait HasApplication
+ * Provides an optional Application reference to the owning class.
+ *
  * @package Nip\Database\Manager
  */
 trait HasApplication
 {
-    /**
-     * @var Application
-     */
-    protected $application;
+    protected mixed $application = null;
 
-    /**
-     * @param Application $application
-     */
-    public function setApplication(Application $application)
+    public function setApplication(mixed $application): void
     {
         $this->application = $application;
     }
 
-    /**
-     * @return Bootstrap
-     */
-    public function getBootstrap()
+    public function getBootstrap(): mixed
     {
         return $this->application;
     }
 
-    /**
-     * @param Bootstrap $bootstrap
-     */
-    public function setBootstrap($bootstrap)
+    public function setBootstrap(mixed $bootstrap): void
     {
         $this->application = $bootstrap;
     }

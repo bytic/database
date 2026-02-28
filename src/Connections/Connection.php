@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Nip\Database\Connections;
 
 use Nip\Database\Adapters\HasAdapterTrait;
@@ -14,93 +16,63 @@ use Nip\Database\Result;
 use PDO;
 
 /**
- * Class Connection
+ * Represents a single database connection.
+ *
+ * Wraps an adapter (e.g. MySQLi) and provides a fluent query-builder factory,
+ * result execution, and connection lifecycle management.
+ *
  * @package Nip\Database\Connections
  */
-class Connection
+class Connection implements ConnectionInterface
 {
     use HasAdapterTrait;
     use HasMetadata;
 
     /**
-     * The active PDO connection.
-     *
-     * @var PDO
+     * The active PDO connection (kept for PDO-based future migration).
      */
-    protected $pdo;
+    protected mixed $pdo;
+
+    protected string $database;
+
+    protected string $tablePrefix = '';
+
+    /** @var array<string, mixed> */
+    protected array $config = [];
+
+    /** @var AbstractQuery|string|null */
+    protected mixed $_query = null;
+
+    /** @var list<AbstractQuery|string> */
+    protected array $_queries = [];
 
     /**
-     * The name of the connected database.
-     *
-     * @var string
-     */
-    protected $database;
-    /**
-     * The table prefix for the connection.
-     *
-     * @var string
-     */
-    protected $tablePrefix = '';
-
-    /**
-     * The database connection configuration options.
-     *
-     * @var array
-     */
-    protected $config = [];
-
-
-    protected $_query;
-
-    protected $_queries = [];
-
-    /**
-     * Create a new database connection instance.
-     *
-     * @param  \PDO|\Closure $pdo
+     * @param  \PDO|\Closure|false|null $pdo
      * @param  string $database
      * @param  string $tablePrefix
-     * @param  array $config
+     * @param  array<string, mixed> $config
      */
-    public function __construct($pdo, $database = '', $tablePrefix = '', $config = [])
+    public function __construct(mixed $pdo, string $database = '', string $tablePrefix = '', array $config = [])
     {
-        $this->pdo = $pdo;
-
-        // First we will setup the default properties. We keep track of the DB
-        // name we are connected to since it is needed when some reflective
-        // type commands are run such as checking whether a table exists.
-        $this->database = $database;
-
+        $this->pdo         = $pdo;
+        $this->database    = $database;
         $this->tablePrefix = $tablePrefix;
-        $this->config = $config;
-
-        // We need to initialize a query grammar and the query post processors
-        // which are both very important parts of the database abstractions
-        // so we initialize these to their default values while starting.
-//        $this->useDefaultQueryGrammar();
-//        $this->useDefaultPostProcessor();
+        $this->config      = $config;
     }
 
     /**
-     * Connects to SQL server
-     *
-     * @param string $host
-     * @param string $user
-     * @param string $password
-     * @param string $database
-     * @param bool $newLink
-     *
-     * @return static
+     * {@inheritdoc}
      */
-    public function connect($host, $user, $password, $database, $newLink = false)
+    public function connect(string $host, string $user, string $password, string $database, bool $newLink = false): static
     {
         if (!$this->pdo) {
             try {
                 $this->pdo = $this->getAdapter()->connect($host, $user, $password, $database, $newLink);
 
                 if (isset($this->config['charset'])) {
-                    $this->getAdapter()->query('SET CHARACTER SET ' . $this->config['charset']);
-                    $this->getAdapter()->query('SET NAMES ' . $this->config['charset']);
+                    $charset = $this->config['charset'];
+                    $this->getAdapter()->query('SET CHARACTER SET ' . $charset);
+                    $this->getAdapter()->query('SET NAMES ' . $charset);
                 }
                 if (isset($this->config['modes'])) {
                     $this->getAdapter()->query("set session sql_mode='{$this->config['modes']}'");
@@ -114,123 +86,112 @@ class Connection
         return $this;
     }
 
-    /**
-     * @return string
-     */
-    public function getDatabase()
+    public function getDatabase(): string
     {
         return $this->database;
     }
 
-    /**
-     * @param string $database
-     */
-    public function setDatabase($database)
+    public function setDatabase(string $database): void
     {
         $this->database = $database;
     }
 
-
     /**
-     * Prefixes table names
-     *
-     * @param string $table
-     * @return string
+     * Optionally prefix a table name (no-op by default; override in subclasses).
      */
-    public function tableName($table)
+    public function tableName(string $table): string
     {
         return $table;
     }
 
     /**
-     * @param string $type optional
-     *
-     * @return AbstractQuery|SelectQuery
+     * {@inheritdoc}
      */
-    public function newSelect()
+    public function newSelect(): SelectQuery
     {
-        return $this->newQuery('select');
+        /** @var SelectQuery $query */
+        $query = $this->newQuery('select');
+        return $query;
     }
 
     /**
-     * @param string $type optional
-     * @return AbstractQuery|SelectQuery|UpdateQuery|InsertQuery|DeleteQuery
+     * {@inheritdoc}
      */
-    public function newQuery($type = "select")
+    public function newQuery(string $type = 'select'): AbstractQuery
     {
-        $className = '\Nip\Database\Query\\' . inflector()->camelize($type);
-        $query = new $className();
+        $className = '\\Nip\\Database\\Query\\' . inflector()->camelize($type);
         /** @var AbstractQuery $query */
+        $query = new $className();
         $query->setManager($this);
 
         return $query;
     }
 
     /**
-     * @return InsertQuery
+     * {@inheritdoc}
      */
-    public function newInsert()
+    public function newInsert(): InsertQuery
     {
-        return $this->newQuery('insert');
+        /** @var InsertQuery $query */
+        $query = $this->newQuery('insert');
+        return $query;
     }
 
     /**
-     * @return UpdateQuery
+     * {@inheritdoc}
      */
-    public function newUpdate()
+    public function newUpdate(): UpdateQuery
     {
-        return $this->newQuery('update');
+        /** @var UpdateQuery $query */
+        $query = $this->newQuery('update');
+        return $query;
     }
 
     /**
-     * @return DeleteQuery
+     * {@inheritdoc}
      */
-    public function newDelete()
+    public function newDelete(): DeleteQuery
     {
-        return $this->newQuery('delete');
+        /** @var DeleteQuery $query */
+        $query = $this->newQuery('delete');
+        return $query;
     }
 
     /**
-     * Executes SQL query
-     *
-     * @param mixed|AbstractQuery $query
-     * @return Result
+     * {@inheritdoc}
      */
-    public function execute($query)
+    public function execute(AbstractQuery|string $query): Result
     {
         $this->_queries[] = $query;
 
-        $sql = is_string($query) ? $query : $query->getString();
-
+        $sql       = is_string($query) ? $query : $query->getString();
         $resultSQL = $this->getAdapter()->execute($sql);
-        $result = new Result($resultSQL, $this->getAdapter());
+        $result    = new Result($resultSQL, $this->getAdapter());
         $result->setQuery($query);
 
         return $result;
     }
 
     /**
-     * Gets the ID of the last inserted record
-     * @return int
+     * {@inheritdoc}
      */
-    public function lastInsertID()
+    public function lastInsertID(): int|string
     {
         return $this->getAdapter()->lastInsertID();
     }
 
     /**
-     * Gets the number of rows affected by the last operation
-     * @return int
+     * {@inheritdoc}
      */
-    public function affectedRows()
+    public function affectedRows(): int
     {
         return $this->getAdapter()->affectedRows();
     }
 
     /**
-     * Disconnects from server
+     * {@inheritdoc}
      */
-    public function disconnect()
+    public function disconnect(): void
     {
         if ($this->pdo) {
             try {
@@ -243,37 +204,32 @@ class Connection
 
     /**
      * @param null|string $table
-     * @return mixed
+     * @return array{fields: array<string, mixed>, indexes: array<string, mixed>}|false
      */
-    public function describeTable($table)
+    public function describeTable(?string $table): array|false
     {
-        return $this->getAdapter()->describeTable($this->protect($table));
+        return $this->getAdapter()->describeTable($this->protect($table ?? ''));
     }
 
     /**
-     * Adds backticks to input
-     *
-     * @param string $input
-     * @return string
+     * {@inheritdoc}
      */
-    public function protect($input)
+    public function protect(string $input): string
     {
-        return str_replace("`*`", "*", '`' . str_replace('.', '`.`', $input) . '`');
+        return str_replace('`*`', '*', '`' . str_replace('.', '`.`', $input) . '`');
     }
 
     /**
-     * @return array
+     * @return list<AbstractQuery|string>
      */
-    public function getQueries()
+    public function getQueries(): array
     {
         return $this->_queries;
     }
 
-    /**
-     * @return \Closure|PDO
-     */
-    public function getPdo()
+    public function getPdo(): mixed
     {
         return $this->pdo;
     }
 }
+

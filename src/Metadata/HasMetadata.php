@@ -1,36 +1,31 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Nip\Database\Metadata;
 
-use Nip\Database\Metadata\Manager as MetadataManager;
-
 /**
+ * Provides lazy-loaded metadata manager access.
  *
+ * @package Nip\Database\Metadata
  */
 trait HasMetadata
 {
-    protected ?MetadataManager $metadata = null;
-    /**
-     * @return MetadataManager
-     */
-    public function getMetadata()
+    protected ?Manager $metadata = null;
+
+    public function getMetadata(): Manager
     {
-        if (!$this->metadata) {
-            $this->metadata = new MetadataManager();
+        if ($this->metadata === null) {
+            $this->metadata = new Manager();
             $this->metadata->setConnection($this);
         }
 
         return $this->metadata;
     }
 
-    /**
-     * @param $metadata
-     * @return static
-     */
-    public function setMetadata($metadata)
+    public function setMetadata(Manager $metadata): static
     {
         $this->metadata = $metadata;
         return $this;
     }
-
 }

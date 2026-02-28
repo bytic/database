@@ -1,49 +1,39 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Nip\Database;
 
 use Nip\Database\Connections\Connection;
 
 /**
- * Class Manager.
- * @deprecated use \Nip\Database\DatabaseManager
+ * @deprecated Use \Nip\Database\DatabaseManager instead.
  */
 class Manager extends DatabaseManager
 {
-    /**
-     * @param $config
-     *
-     * @return Connection
-     */
-    public function newConnectionFromConfig($config)
+    public function newConnectionFromConfig(mixed $config): Connection
     {
-        $connection = $this->createNewConnection(
+        return $this->createNewConnection(
             $config->adapter,
             $config->host,
             $config->user,
             $config->password,
             $config->name
         );
-
-        return $connection;
     }
 
-    /**
-     * @param $adapter
-     * @param $host
-     * @param $user
-     * @param $password
-     * @param $database
-     *
-     * @return Connection
-     */
-    public function createNewConnection($adapter, $host, $user, $password, $database)
-    {
+    public function createNewConnection(
+        string $adapter,
+        string $host,
+        string $user,
+        string $password,
+        string $database
+    ): Connection {
         try {
             $connection = $this->newConnection();
 
-            $adapter = $connection->newAdapter($adapter);
-            $connection->setAdapter($adapter);
+            $adapterInstance = $connection->newAdapter($adapter);
+            $connection->setAdapter($adapterInstance);
 
             $connection->connect($host, $user, $password, $database);
             $this->initNewConnection($connection);
@@ -59,20 +49,14 @@ class Manager extends DatabaseManager
         return $connection;
     }
 
-    /**
-     * @param $connection
-     */
-    public function initNewConnection($connection)
+    public function initNewConnection(Connection $connection): void
     {
         if ($this->getBootstrap()->getDebugBar()->isEnabled()) {
             $this->getBootstrap()->getDebugBar()->initDatabaseAdapter($connection->getAdapter());
         }
     }
 
-    /**
-     * @return Connection
-     */
-    public function newConnection()
+    public function newConnection(): Connection
     {
         return new Connection(false);
     }

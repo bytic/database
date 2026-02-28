@@ -1,26 +1,24 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Nip\Database\Query;
 
 /**
- * Class Delete
+ * DELETE query builder.
+ *
  * @package Nip\Database\Query
  */
 class Delete extends AbstractQuery
 {
-    /**
-     * Joins together DELETE, FROM, WHERE, ORDER, and LIMIT parts of SQL query
-     * @return string
-     */
-    public function assemble()
+    public function assemble(): string
     {
-        $query = "DELETE FROM {$this->getManager()->protect($this->getTable())}";
-
+        $query  = 'DELETE FROM ' . $this->getManager()->protect($this->getTable());
         $query .= $this->assembleWhere();
 
         $order = $this->parseOrder();
         if (!empty($order)) {
-            $query .= " order by {$order}";
+            $query .= " ORDER BY {$order}";
         }
 
         $query .= $this->assembleLimit();

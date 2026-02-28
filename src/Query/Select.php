@@ -1,38 +1,36 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Nip\Database\Query;
 
 use Nip\Database\Query\Select\Union;
 
 /**
- * Class Select
- * @package Nip\Database\Query
+ * SELECT query builder.
  *
- * @method $this options() options(string $option = null)
- * @method $this setFrom() setFrom(string $table = null)
- * @method $this setOrder() setOrder(array | string $cols = null)
+ * @method $this options(string $option = null)
+ * @method $this setFrom(string $table = null)
+ * @method $this setOrder(array|string $cols = null)
+ *
+ * @package Nip\Database\Query
  */
 class Select extends AbstractQuery
 {
-    /**
-     * @param $name
-     * @param $arguments
-     * @return AbstractQuery|Select
-     */
-    public function __call($name, $arguments)
+    public function __call(string $name, array $arguments): static
     {
-        if (in_array($name, ['min', 'max', 'count', 'avg', 'sum'])) {
+        if (in_array($name, ['min', 'max', 'count', 'avg', 'sum'], true)) {
             $input = reset($arguments);
 
             if (is_array($input)) {
                 $input[] = false;
             } else {
-                $alias = isset($arguments[1]) ? $arguments[1] : null;
-                $protected = isset($arguments[2]) ? $arguments[2] : null;
-                $input = [$input, $alias, $protected];
+                $alias     = $arguments[1] ?? null;
+                $protected = $arguments[2] ?? null;
+                $input     = [$input, $alias, $protected];
             }
 
-            $input[0] = strtoupper($name) . '(' . $this->protect($input[0]) . ')';
+            $input[0] = strtoupper($name) . '(' . $this->protect((string) $input[0]) . ')';
 
             return $this->cols($input);
         }
@@ -41,48 +39,36 @@ class Select extends AbstractQuery
     }
 
     /**
-     * Inserts FULLTEXT statement into $this->select and $this->where
+     * Add a MATCH … AGAINST full-text condition and column.
      *
-     * @param mixed $fields
-     * @param string $against
-     * @param string $alias
-     * @param boolean $boolean_mode
-     * @return $this
+     * @param array<int, string|array{0: string, 1?: bool}> $fields
      */
-    public function match($fields, $against, $alias, $boolean_mode = true)
+    public function match(array $fields, string $against, string $alias, bool $boolean_mode = true): static
     {
-        if (!is_array($fields)) {
-            $fields = [];
-        }
-
         $match = [];
         foreach ($fields as $itemField) {
             if (!is_array($itemField)) {
                 $itemField = [$itemField];
-
-                $field = isset($itemField[0]) ? $itemField[0] : false;
-                $protected = isset($itemField[1]) ? $itemField[1] : true;
-
-                $match[] = $protected ? $this->protect($field) : $field;
             }
+
+            $field     = $itemField[0] ?? false;
+            $protected = $itemField[1] ?? true;
+
+            $match[] = $protected ? $this->protect((string) $field) : (string) $field;
         }
-        $match = 'MATCH(' . implode(
-            ',',
-            $match
-        ) . ") AGAINST ('" . $against . "'" . ($boolean_mode ? ' IN BOOLEAN MODE' : '') . ')';
+        $match = 'MATCH(' . implode(',', $match) . ") AGAINST ('" . $against . "'" . ($boolean_mode ? ' IN BOOLEAN MODE' : '') . ')';
 
         return $this->cols([$match, $alias, false])->where([$match]);
     }
 
     /**
-     * Inserts JOIN entry for the last table inserted by $this->from()
+     * Add a JOIN for the most recently added FROM table.
      *
-     * @param mixed $table the table to be joined, given as simple string or name - alias pair
-     * @param string|boolean $on
-     * @param string $type SQL join type (INNER, OUTER, LEFT INNER, etc.)
-     * @return $this
+     * @param string|array{0: string|AbstractQuery, 1?: string} $table  Table name or [table, alias]
+     * @param string|array{0: string, 1: string}|false          $on     ON condition
+     * @param string                                             $type   JOIN type (LEFT, RIGHT, INNER, …)
      */
-    public function join($table, $on = false, $type = '')
+    public function join(mixed $table, mixed $on = false, string $type = ''): static
     {
         $lastTable = end($this->parts['from']);
 
@@ -100,13 +86,11 @@ class Select extends AbstractQuery
     }
 
     /**
-     * Sets the group paramater for the query
+     * Set the GROUP BY clause.
      *
-     * @param array $fields
-     * @param boolean $rollup suport for modifier WITH ROLLUP
-     * @return $this
+     * @param array<int, string|array{0: string, 1?: string}>|string $fields
      */
-    public function group($fields, $rollup = false)
+    public function group(mixed $fields, bool $rollup = false): static
     {
         $this->parts['group']['fields'] = $fields;
         $this->parts['group']['rollup'] = $rollup;
@@ -114,46 +98,41 @@ class Select extends AbstractQuery
         return $this;
     }
 
-    /**
-     * @return string
-     */
-    public function assemble()
+    public function assemble(): string
     {
-        $select = $this->parseCols();
+        $select  = $this->parseCols();
         $options = $this->parseOptions();
-        $from = $this->parseFrom();
+        $from    = $this->parseFrom();
+        $group   = $this->parseGroup();
+        $having  = $this->parseHaving();
+        $order   = $this->parseOrder();
 
-        $group = $this->parseGroup();
-        $having = $this->parseHaving();
-
-        $order = $this->parseOrder();
-
-        $query = "SELECT";
+        $query = 'SELECT';
 
         if (!empty($options)) {
-            $query .= " $options";
+            $query .= " {$options}";
         }
 
         if (!empty($select)) {
-            $query .= " $select";
+            $query .= " {$select}";
         }
 
         if (!empty($from)) {
-            $query .= " FROM $from";
+            $query .= " FROM {$from}";
         }
 
         $query .= $this->assembleWhere();
 
         if (!empty($group)) {
-            $query .= " GROUP BY $group";
+            $query .= " GROUP BY {$group}";
         }
 
         if (!empty($having)) {
-            $query .= " HAVING $having";
+            $query .= " HAVING {$having}";
         }
 
         if (!empty($order)) {
-            $query .= " ORDER BY $order";
+            $query .= " ORDER BY {$order}";
         }
 
         $query .= $this->assembleLimit();
@@ -161,137 +140,119 @@ class Select extends AbstractQuery
         return $query;
     }
 
-    /**
-     * @return null|string
-     */
-    public function parseOptions()
+    public function parseOptions(): ?string
     {
         if (!empty($this->parts['options'])) {
-            return implode(" ", array_map("strtoupper", $this->parts['options']));
+            return implode(' ', array_map('strtoupper', $this->parts['options']));
         }
 
         return null;
     }
 
-    /**
-     * @param $query
-     * @return Union
-     */
-    public function union($query)
+    public function union(AbstractQuery $query): Union
     {
         return new Union($this, $query);
     }
 
-    /**
-     * Parses SELECT entries
-     *
-     * @return string
-     */
-    protected function parseCols()
+    protected function parseCols(): string
     {
         if (!isset($this->parts['cols']) || !is_array($this->parts['cols']) || count($this->parts['cols']) < 1) {
             return '*';
-        } else {
-            $selectParts = [];
-
-            foreach ($this->parts['cols'] as $itemSelect) {
-                if (is_array($itemSelect)) {
-                    $field = isset($itemSelect[0]) ? $itemSelect[0] : false;
-                    $alias = isset($itemSelect[1]) ? $itemSelect[1] : false;
-                    $protected = isset($itemSelect[2]) ? $itemSelect[2] : true;
-
-                    $selectParts[] = ($protected ? $this->protect($field) : $field) . (!empty($alias) ? ' AS ' . $this->protect($alias) : '');
-                } else {
-                    $selectParts[] = $itemSelect;
-                }
-            }
-
-            return implode(', ', $selectParts);
         }
+
+        $selectParts = [];
+
+        foreach ($this->parts['cols'] as $itemSelect) {
+            if (is_array($itemSelect)) {
+                $field     = $itemSelect[0] ?? false;
+                $alias     = $itemSelect[1] ?? false;
+                $protected = $itemSelect[2] ?? true;
+
+                $selectParts[] = ($protected ? $this->protect((string) $field) : (string) $field)
+                    . (!empty($alias) ? ' AS ' . $this->protect((string) $alias) : '');
+            } else {
+                $selectParts[] = $itemSelect;
+            }
+        }
+
+        return implode(', ', $selectParts);
     }
 
-    /**
-     * Parses FROM entries
-     * @return string
-     */
-    private function parseFrom()
+    private function parseFrom(): string
     {
-        if (!empty($this->parts['from'])) {
-            $parts = [];
-
-            foreach ($this->parts['from'] as $key => $item) {
-                if (is_array($item)) {
-                    $table = isset($item[0]) ? $item[0] : false;
-                    $alias = isset($item[1]) ? $item[1] : false;
-
-                    if (is_object($table)) {
-                        if (!$alias) {
-                            trigger_error('Select statements in for need aliases defined', E_USER_ERROR);
-                        }
-                        $parts[$key] = '(' . $table . ') AS ' . $this->protect($alias) . $this->parseJoin($alias);
-                    } else {
-                        $parts[$key] = $this->protect($table) . ' AS ' . $this->protect((!empty($alias) ? $alias : $table)) . $this->parseJoin($alias);
-                    }
-                } elseif (!strpos($item, ' ')) {
-                    $parts[] = $this->protect($item) . $this->parseJoin($item);
-                } else {
-                    $parts[] = $item;
-                }
-            }
-
-            return implode(", ", array_unique($parts));
+        if (empty($this->parts['from'])) {
+            return '';
         }
 
-        return null;
+        $parts = [];
+
+        foreach ($this->parts['from'] as $key => $item) {
+            if (is_array($item)) {
+                $table = $item[0] ?? false;
+                $alias = $item[1] ?? false;
+
+                if (is_object($table)) {
+                    if (!$alias) {
+                        trigger_error('Select statements in FROM need aliases defined', E_USER_ERROR);
+                    }
+                    $parts[$key] = '(' . $table . ') AS ' . $this->protect((string) $alias) . $this->parseJoin((string) $alias);
+                } else {
+                    $parts[$key] = $this->protect((string) $table)
+                        . ' AS ' . $this->protect((string) (!empty($alias) ? $alias : $table))
+                        . $this->parseJoin((string) (!empty($alias) ? $alias : $table));
+                }
+            } elseif (!str_contains((string) $item, ' ')) {
+                $parts[] = $this->protect((string) $item) . $this->parseJoin((string) $item);
+            } else {
+                $parts[] = (string) $item;
+            }
+        }
+
+        return implode(', ', array_unique($parts));
     }
 
-    /**
-     * Parses JOIN entries for a given table
-     * Concatenates $this->join entries for input table
-     *
-     * @param string $table table to build JOIN statement for
-     * @return string
-     */
-    private function parseJoin($table)
+    private function parseJoin(string $table): string
     {
         $result = '';
 
-        if (isset($this->parts['join'][$table])) {
-            foreach ($this->parts['join'][$table] as $join) {
-                if (!is_array($join[0])) {
-                    $join[0] = [$join[0]];
+        if (!isset($this->parts['join'][$table])) {
+            return $result;
+        }
+
+        foreach ($this->parts['join'][$table] as $join) {
+            if (!is_array($join[0])) {
+                $join[0] = [$join[0]];
+            }
+
+            $joinTable = $join[0][0] ?? false;
+            $joinAlias = $join[0][1] ?? false;
+            $joinOn    = $join[1] ?? false;
+            $joinType  = $join[2] ?? '';
+
+            $result .= ($joinType ? ' ' . strtoupper((string) $joinType) : '') . ' JOIN ';
+
+            if ($joinTable instanceof AbstractQuery) {
+                $result .= '(' . $joinTable . ')';
+                if (empty($joinAlias)) {
+                    $joinAlias = 'join1';
                 }
+                $joinTable = $joinAlias;
+            } elseif (str_contains((string) $joinTable, '(')) {
+                $result .= (string) $joinTable;
+            } else {
+                $result .= $this->protect((string) $joinTable);
+            }
 
-                $joinTable = isset($join[0][0]) ? $join[0][0] : false;
-                $joinAlias = isset($join[0][1]) ? $join[0][1] : false;
-                $joinOn = isset($join[1]) ? $join[1] : false;
+            $result .= (!empty($joinAlias) ? ' AS ' . $this->protect((string) $joinAlias) : '');
 
-
-                $joinType = isset($join[2]) ? $join[2] : '';
-
-                $result .= ($joinType ? ' ' . strtoupper($joinType) : '') . ' JOIN ';
-                if ($joinTable instanceof AbstractQuery) {
-                    $result .= '(' . $joinTable . ')';
-                    if (empty($joinAlias)) {
-                        $joinAlias = 'join1';
-                    }
-                    $joinTable = $joinAlias;
-                } elseif (strpos($joinTable, '(') !== false) {
-                    $result .= $joinTable;
+            if ($joinOn) {
+                $result .= ' ON ';
+                if (is_array($joinOn)) {
+                    $result .= $this->protect($table . '.' . $joinOn[0])
+                        . ' = '
+                        . $this->protect($joinTable . '.' . $joinOn[1]);
                 } else {
-                    $result .= $this->protect($joinTable);
-                }
-                $result .= (!empty($joinAlias) ? ' AS ' . $this->protect($joinAlias) : '');
-
-                if ($joinOn) {
-                    $result .= ' ON ';
-                    if (is_array($joinOn)) {
-                        $result .= $this->protect($table . '.' . $joinOn[0])
-                            . ' = '
-                            . $this->protect($joinTable . '.' . $joinOn[1]);
-                    } else {
-                        $result .= '(' . $joinOn . ')';
-                    }
+                    $result .= '(' . $joinOn . ')';
                 }
             }
         }
@@ -299,29 +260,24 @@ class Select extends AbstractQuery
         return $result;
     }
 
-    /**
-     * Parses GROUP entries
-     *
-     * @uses $this->group['fields'] array with elements to group by
-     * @return string
-     */
-    private function parseGroup()
+    private function parseGroup(): string
     {
         $group = '';
+
         if (isset($this->parts['group']['fields'])) {
             if (is_array($this->parts['group']['fields'])) {
                 $groupFields = [];
                 foreach ($this->parts['group']['fields'] as $field) {
-                    $field = is_array($field) ? $field : [$field];
-                    $column = isset($field[0]) ? $field[0] : false;
-                    $type = isset($field[1]) ? $field[1] : '';
+                    $field  = is_array($field) ? $field : [$field];
+                    $column = $field[0] ?? false;
+                    $type   = $field[1] ?? '';
 
-                    $groupFields[] = $this->protect($column) . ($type ? ' ' . strtoupper($type) : '');
+                    $groupFields[] = $this->protect((string) $column) . ($type ? ' ' . strtoupper((string) $type) : '');
                 }
 
                 $group .= implode(', ', $groupFields);
             } else {
-                $group .= $this->parts['group']['fields'];
+                $group .= (string) $this->parts['group']['fields'];
             }
         }
 

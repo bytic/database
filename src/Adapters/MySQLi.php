@@ -1,191 +1,173 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Nip\Database\Adapters;
 
 /**
- * Class MySQLi
+ * MySQLi-based database adapter.
+ *
+ * Uses the procedural mysqli_* API to stay compatible with the legacy code
+ * while exposing a clean, typed surface via AdapterInterface.
+ *
  * @package Nip\Database\Adapters
  */
 class MySQLi extends AbstractAdapter implements AdapterInterface
 {
-    protected $connection;
+    protected ?\mysqli $connection = null;
 
     /**
-     * Connects to MySQL server
+     * Connect to a MySQL server.
      *
-     * @param string|boolean $host
-     * @param string|boolean $user
-     * @param string|boolean $password
-     * @param string|boolean $database
-     * @param bool $newLink
-     *
-     * @return resource
+     * Returns the raw mysqli connection on success or null on failure
+     * (a PHP warning is triggered so the caller can react accordingly).
      */
-    public function connect($host = false, $user = false, $password = false, $database = false, $newLink = false)
-    {
-        $this->connection = mysqli_connect($host, $user, $password, $newLink);
+    public function connect(
+        string $host = '',
+        string $user = '',
+        string $password = '',
+        string $database = '',
+        bool $newLink = false
+    ): ?\mysqli {
+        $this->connection = mysqli_connect($host, $user, $password);
 
-        if ($this->connection) {
+        if ($this->connection instanceof \mysqli) {
             if ($this->selectDatabase($database)) {
                 return $this->connection;
-            } else {
-                $message = 'Cannot select database '.$database;
             }
+            $message = 'Cannot select database ' . $database;
         } else {
-            $message = mysqli_error($this->connection);
+            $message = mysqli_connect_error() ?? 'Unknown connection error';
         }
 
-        if (!$this->connection) {
-            trigger_error($message, E_USER_WARNING);
+        trigger_error($message, E_USER_WARNING);
+
+        return null;
+    }
+
+    public function selectDatabase(string $database): bool
+    {
+        return $this->connection instanceof \mysqli
+            && mysqli_select_db($this->connection, $database);
+    }
+
+    public function query(string $sql): \mysqli_result|bool
+    {
+        if (!$this->connection instanceof \mysqli) {
+            trigger_error('MySQLi adapter has no active connection', E_USER_WARNING);
+            return false;
         }
-    }
 
-    /**
-     * @param $database
-     * @return bool
-     */
-    public function selectDatabase($database)
-    {
-        return mysqli_select_db($this->connection, $database);
-    }
-
-    /**
-     * @param $sql
-     * @return bool|\mysqli_result
-     */
-    public function query($sql)
-    {
         try {
-            return mysqli_query($this->connection, $sql);
+            $result = mysqli_query($this->connection, $sql);
+            return $result === false ? false : $result;
         } catch (\Exception $e) {
-            throw new \Exception($e->getMessage().' for query '.$sql, $e->getCode(), $e);
+            throw new \RuntimeException($e->getMessage() . ' for query ' . $sql, $e->getCode(), $e);
         }
     }
 
-    /**
-     * @return int|string
-     */
-    public function lastInsertID()
+    public function lastInsertID(): int|string
     {
-        return mysqli_insert_id($this->connection);
+        return $this->connection instanceof \mysqli ? mysqli_insert_id($this->connection) : 0;
     }
 
-    /**
-     * @return int
-     */
-    public function affectedRows()
+    public function affectedRows(): int
     {
-        return mysqli_affected_rows($this->connection);
+        return $this->connection instanceof \mysqli ? mysqli_affected_rows($this->connection) : 0;
     }
 
-    /**
-     * @return string
-     */
-    public function info()
+    public function info(): string
     {
-        return mysqli_info($this->connection);
+        return $this->connection instanceof \mysqli ? (mysqli_info($this->connection) ?? '') : '';
     }
 
-    /**
-     * @param $result
-     * @return null|object
-     */
-    public function fetchObject($result)
+    public function fetchObject(mixed $result): ?object
     {
-        return mysqli_fetch_object($result);
+        return ($result instanceof \mysqli_result) ? (mysqli_fetch_object($result) ?: null) : null;
     }
 
-    /**
-     * @param $result
-     * @param $row
-     * @param $field
-     * @return mixed
-     */
-    public function result($result, $row, $field)
+    public function result(mixed $result, int $row, string $field): mixed
     {
-        return mysqli_result($result, $row, $field);
+        if (!$result instanceof \mysqli_result) {
+            return null;
+        }
+        mysqli_data_seek($result, $row);
+        $row = mysqli_fetch_assoc($result);
+        return $row[$field] ?? null;
     }
 
-    /**
-     * @param $result
-     */
-    public function freeResults($result)
+    public function freeResults(mixed $result): void
     {
-        return mysqli_free_result($result);
+        if ($result instanceof \mysqli_result) {
+            mysqli_free_result($result);
+        }
     }
 
-    /**
-     * @param $table
-     * @return array|false
-     */
-    public function describeTable($table)
+    public function describeTable(string $table): array|false
     {
-        if (!($this->connection instanceof \mysqli)) {
+        if (!$this->connection instanceof \mysqli) {
             return false;
         }
 
         $return = ['fields' => [], 'indexes' => []];
 
-        $result = $this->execute('DESCRIBE '.$table);
-        if (is_bool($result)) {
+        $result = $this->execute('DESCRIBE ' . $table);
+        if ($result === false || is_bool($result)) {
             return false;
         }
         if (mysqli_num_rows($result)) {
             while ($row = $this->fetchAssoc($result)) {
                 $return['fields'][$row['Field']] = [
-                    'field' => $row['Field'],
-                    'type' => $row['Type'],
-                    'nullable' => strtoupper($row['Null']) == 'YES',
-                    'primary' => (
+                    'field'          => $row['Field'],
+                    'type'           => $row['Type'],
+                    'nullable'       => strtoupper($row['Null']) === 'YES',
+                    'primary'        => (
                         isset($return['indexes']['PRIMARY']['fields'][0])
-                        && $return['indexes']['PRIMARY']['fields'][0] == $row['Field']
+                        && $return['indexes']['PRIMARY']['fields'][0] === $row['Field']
                     ),
-                    'default' => $row['Default'],
+                    'default'        => $row['Default'],
                     'auto_increment' => ($row['Extra'] === 'auto_increment'),
                 ];
             }
         }
 
-        $result = $this->execute('SHOW INDEX IN '.$table);
-        if (is_bool($result)) {
+        $result = $this->execute('SHOW INDEX IN ' . $table);
+        if ($result === false || is_bool($result)) {
             return false;
         }
         if (mysqli_num_rows($result)) {
             while ($row = $this->fetchAssoc($result)) {
-                if (!isset($return['indexes'][$row['Key_name']])) {
-                    $return['indexes'][$row['Key_name']] = [];
+                $keyName = $row['Key_name'];
+                if (!isset($return['indexes'][$keyName])) {
+                    $return['indexes'][$keyName] = [];
                 }
-                $return['indexes'][$row['Key_name']]['fields'][] = $row['Column_name'];
-                $return['indexes'][$row['Key_name']]['unique'] = $row['Non_unique'] == '0';
-                $return['indexes'][$row['Key_name']]['fulltext'] = $row['Index_type'] == 'FULLTEXT';
-                $return['indexes'][$row['Key_name']]['type'] = $row['Index_type'];
+                $return['indexes'][$keyName]['fields'][]  = $row['Column_name'];
+                $return['indexes'][$keyName]['unique']    = $row['Non_unique'] === '0';
+                $return['indexes'][$keyName]['fulltext']  = $row['Index_type'] === 'FULLTEXT';
+                $return['indexes'][$keyName]['type']      = $row['Index_type'];
             }
         }
 
         return $return;
     }
 
-    /**
-     * @param $result
-     * @return array|null
-     */
-    public function fetchAssoc($result)
+    public function fetchAssoc(mixed $result): ?array
     {
-        return mysqli_fetch_assoc($result);
+        return ($result instanceof \mysqli_result) ? (mysqli_fetch_assoc($result) ?: null) : null;
     }
 
     /**
-     * @return array
+     * @return array<string, array{type: string}>
      */
-    public function getTables()
+    public function getTables(): array
     {
         $return = [];
 
-        $result = $this->execute("SHOW FULL TABLES");
-        if ($this->numRows($result)) {
+        $result = $this->execute('SHOW FULL TABLES');
+        if ($result instanceof \mysqli_result && $this->numRows($result)) {
             while ($row = $this->fetchArray($result)) {
                 $return[$row[0]] = [
-                    "type" => $row[1] == "BASE TABLE" ? "table" : "view",
+                    'type' => $row[1] === 'BASE TABLE' ? 'table' : 'view',
                 ];
             }
         }
@@ -193,67 +175,76 @@ class MySQLi extends AbstractAdapter implements AdapterInterface
         return $return;
     }
 
-    /**
-     * @param $result
-     * @return int
-     */
-    public function numRows($result)
+    public function numRows(mixed $result): int
     {
-        return mysqli_num_rows($result);
+        return ($result instanceof \mysqli_result) ? (int) mysqli_num_rows($result) : 0;
+    }
+
+    public function fetchArray(mixed $result): ?array
+    {
+        return ($result instanceof \mysqli_result) ? (mysqli_fetch_array($result) ?: null) : null;
     }
 
     /**
-     * @param $result
-     * @return array|null
+     * Quote a scalar value for safe embedding in a SQL string.
+     *
+     * Numeric values are returned as-is; strings are escaped and wrapped in
+     * single quotes using the connection's current character set.
      */
-    public function fetchArray($result)
+    public function quote(mixed $value): int|float|string
     {
-        return mysqli_fetch_array($result);
-    }
+        $cleaned = $this->cleanData($value);
 
-    /**
-     * @param $value
-     * @return int|string
-     */
-    public function quote($value)
-    {
-        $value = $this->cleanData($value);
-
-        $intVal = filter_var($value, FILTER_VALIDATE_INT);
+        $intVal = filter_var($cleaned, FILTER_VALIDATE_INT);
         if ($intVal !== false) {
-            return $intVal;
+            return (int) $intVal;
         }
 
-        $floatVal = filter_var($value, FILTER_VALIDATE_FLOAT);
+        $floatVal = filter_var($cleaned, FILTER_VALIDATE_FLOAT);
         if ($floatVal !== false) {
-            return $floatVal;
+            return (float) $floatVal;
         }
 
-        return "'$value'";
+        return "'{$cleaned}'";
     }
 
     /**
-     * @param $data
-     * @return string
+     * Escape a string using the connection's current character set.
+     *
+     * Falls back to addslashes() when there is no active connection so that
+     * unit tests without a real database still produce a safe result.
      */
-    public function cleanData($data)
+    public function cleanData(mixed $data): mixed
     {
-        if (empty($data)) {
+        if ($data === null || $data === '') {
             return $data;
         }
-        return mysqli_real_escape_string($this->connection, $data);
+
+        if (!is_string($data) && !is_numeric($data)) {
+            return $data;
+        }
+
+        if ($this->connection instanceof \mysqli) {
+            return mysqli_real_escape_string($this->connection, (string) $data);
+        }
+
+        // Fallback: addslashes is not a cryptographic guarantee, but it
+        // prevents the most obvious injections when there is no live connection
+        // (e.g. during unit tests that mock the connection).
+        return addslashes((string) $data);
     }
 
-    /**
-     * @return string
-     */
-    public function error()
+    public function error(): string
     {
-        return mysqli_error($this->connection);
+        return $this->connection instanceof \mysqli ? (mysqli_error($this->connection) ?: '') : '';
     }
 
-    public function disconnect()
+    public function disconnect(): void
     {
-        mysqli_close($this->connection);
+        if ($this->connection instanceof \mysqli) {
+            mysqli_close($this->connection);
+            $this->connection = null;
+        }
     }
 }
+

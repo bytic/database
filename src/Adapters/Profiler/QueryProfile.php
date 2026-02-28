@@ -1,98 +1,69 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Nip\Database\Adapters\Profiler;
 
 use Nip\Profiler\Profile;
 
 /**
- * Class QueryProfile
+ * Stores timing and metadata for a single executed SQL statement.
+ *
  * @package Nip\Database\Adapters\Profiler
  */
 class QueryProfile extends Profile
 {
-    public $query;
-    public $type;
-    public $adapter;
+    public ?string $query        = null;
+    public ?string $type         = null;
+    public mixed   $adapter      = null;
+    public mixed   $info         = null;
+    public int     $affectedRows = 0;
 
-    public $info;
-    public $affectedRows;
-    public $columns = ['time', 'type', 'memory', 'query', 'affectedRows', 'info'];
+    /** @var list<string> */
+    public array $columns = ['time', 'type', 'memory', 'query', 'affectedRows', 'info'];
 
-    /**
-     * @param null $name
-     */
-    public function setName($name)
+    public function setName(mixed $name): void
     {
-        $this->query = $name;
-        $this->type = $this->detectQueryType();
+        $this->query = (string) $name;
+        $this->type  = $this->detectQueryType();
 
         parent::setName($name);
     }
 
-    /**
-     * @return string
-     */
-    public function detectQueryType()
+    public function detectQueryType(): string
     {
-        // make sure we have a query type
-        switch (strtolower(substr($this->query, 0, 6))) {
-            case 'insert':
-                return 'INSERT';
-
-            case 'update':
-                return 'UPDATE';
-
-            case 'delete':
-                return 'DELETE';
-
-            case 'select':
-                return 'SELECT';
-
-            default:
-                return 'QUERY';
-        }
+        return match (strtolower(substr((string) $this->query, 0, 6))) {
+            'insert' => 'INSERT',
+            'update' => 'UPDATE',
+            'delete' => 'DELETE',
+            'select' => 'SELECT',
+            default  => 'QUERY',
+        };
     }
 
-    /**
-     * @return mixed
-     */
-    public function getQuery()
+    public function getQuery(): ?string
     {
         return $this->query;
     }
 
-    /**
-     * @return mixed
-     */
-    public function getConnection()
-    {
-        return $this->query;
-    }
-
-    public function calculateResources()
+    public function calculateResources(): void
     {
         parent::calculateResources();
         $this->getInfo();
     }
 
-    public function getInfo()
+    public function getInfo(): void
     {
-        $this->info = $this->getAdapter()->info();
+        $this->info         = $this->getAdapter()->info();
         $this->affectedRows = $this->getAdapter()->affectedRows();
     }
 
-    /**
-     * @return mixed
-     */
-    public function getAdapter()
+    public function getAdapter(): mixed
     {
         return $this->adapter;
     }
 
-    /**
-     * @param mixed $adapter
-     */
-    public function setAdapter($adapter)
+    public function setAdapter(mixed $adapter): void
     {
         $this->adapter = $adapter;
     }

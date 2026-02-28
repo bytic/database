@@ -1,20 +1,18 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Nip\Database\Query;
 
 /**
- * Class Replace
+ * REPLACE INTO query builder.
+ *
  * @package Nip\Database\Query
  */
 class Replace extends Insert
 {
-    /**
-     * @return string
-     */
-    public function assemble()
+    public function assemble(): string
     {
-        $query = 'REPLACE INTO ' . $this->protect($this->getTable()) . $this->parseCols() . $this->parseValues();
-
-        return $query;
+        return 'REPLACE INTO ' . $this->protect($this->getTable()) . $this->parseCols() . $this->parseValues();
     }
 }
